@@ -1,0 +1,379 @@
+using FieldGuide.Core;
+using Xunit;
+
+namespace FieldGuide.Tests;
+
+/// <summary>page.js fed the real core's view the way the plugin feeds it: the window, the HUD button, the lookups and the phone app.</summary>
+public class PageScriptTests
+{
+    private const string Online = GuideView.OnlineBase;
+    private const string Local = "http://127.0.0.1:5123";
+
+    private static string ViewOf(string? siteBase, OfflineState? state = null, bool isChinese = false) =>
+        GuideView.Json(siteBase, isChinese, WindowLayout.Default, state ?? new OfflineState.Ready("v1", 0), "/");
+
+    private static PageScript Ready(string? siteBase = Online, OfflineState? state = null)
+    {
+        var page = new PageScript();
+
+        page.Setup(ViewOf(siteBase, state));
+
+        return page;
+    }
+
+    private static PageScript Opened()
+    {
+        var page = Ready();
+
+        page.Toggle();
+        page.Forget();
+
+        return page;
+    }
+
+    // ===== The window =====
+
+    [Fact]
+    public void The_hud_button_asks_the_plugin_to_toggle_the_window()
+    {
+        var page = Ready();
+
+        page.Run("openHud()");
+        page.Poll();
+        page.Click("hudButton().querySelector('svg')");
+
+        Assert.Contains(new PageCommand.Toggle(), page.Sent);
+    }
+
+    [Fact]
+    public void The_hud_button_is_placed_once_however_often_the_page_is_checked()
+    {
+        var page = Ready();
+
+        page.Run("openHud()");
+        page.Poll();
+        page.Poll();
+
+        Assert.Equal(1, page.Count("pageOf(/CoreUI1/).querySelectorAll('.fg-hud-btn')"));
+    }
+
+    [Fact]
+    public void Opening_shows_the_site_home_and_tells_the_plugin_where_the_window_is()
+    {
+        var page = Ready();
+
+        page.Toggle();
+
+        Assert.True(page.Is("guideWindow().classList.contains('is-open')"));
+        Assert.Equal(Online + "/en/", page.Text("guideFrame().src"));
+        Assert.Contains(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.8)), page.Sent);
+    }
+
+    [Fact]
+    public void The_close_button_hides_the_window_and_releases_its_clicks()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('close')");
+
+        Assert.False(page.Is("guideWindow().classList.contains('is-open')"));
+        Assert.Contains(new PageCommand.Hidden(), page.Sent);
+    }
+
+    [Fact]
+    public void The_home_button_goes_back_to_the_site_home()
+    {
+        var page = Opened();
+
+        page.Run("guideFrame().src = 'elsewhere'");
+        page.Click("windowButton('home')");
+
+        Assert.Equal(Online + "/en/", page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void Dragging_the_title_bar_moves_the_window_and_saves_where_it_landed()
+    {
+        var page = Opened();
+
+        // 100 px left and 50 px up on a 1000x500 page; the top edge stops at the top of the screen.
+        page.Run("dragFrom(guideWindow().querySelector('.fg-title'), 500, 100, 400, 50)");
+
+        Assert.Equal(new PageCommand.Dragging(), page.Sent[0]);
+        Assert.Contains(new PageCommand.Moved(new WindowLayout(0.5, 0, 0.36, 0.8)), page.Sent);
+        Assert.Contains(new PageCommand.Shown(new NormalRect(0.5, 0, 0.36, 0.8)), page.Sent);
+    }
+
+    [Fact]
+    public void A_window_dragged_past_the_edge_stays_wholly_on_screen()
+    {
+        var page = Opened();
+
+        page.Run("dragFrom(guideWindow().querySelector('.fg-bar'), 500, 100, 1900, 900)");
+
+        // Shown is read as the page sent it, so this is the page's own clamp, not the plugin's.
+        var shown = page.Sent.OfType<PageCommand.Shown>().Single().Area;
+
+        Assert.Equal(new NormalRect(0.64, 0.2, 0.36, 0.8), shown);
+    }
+
+    [Fact]
+    public void Resizing_from_the_left_edge_stops_at_the_minimum_width()
+    {
+        var page = Opened();
+
+        page.Run("dragFrom(guideWindow().querySelector('.fg-w'), 600, 100, 1500, 100)");
+
+        Assert.Contains(new PageCommand.Moved(new WindowLayout(0.81, 0.08, 0.15, 0.8)), page.Sent);
+    }
+
+    [Fact]
+    public void Resizing_from_a_corner_moves_both_its_edges()
+    {
+        var page = Opened();
+
+        // The bottom-right corner pulled 100 px left and 50 px up.
+        page.Run("dragFrom(guideWindow().querySelector('.fg-se'), 960, 440, 860, 390)");
+
+        Assert.Contains(new PageCommand.Moved(new WindowLayout(0.6, 0.08, 0.26, 0.7)), page.Sent);
+    }
+
+    [Fact]
+    public void A_press_on_a_title_bar_button_is_a_click_not_a_drag()
+    {
+        var page = Opened();
+
+        page.Run("fire('mousedown', windowButton('home'), { clientX: 700, clientY: 50 })");
+
+        Assert.DoesNotContain(new PageCommand.Dragging(), page.Sent);
+    }
+
+    [Fact]
+    public void While_dragging_the_page_keeps_the_plugin_routing_every_click_to_it()
+    {
+        var page = Opened();
+
+        page.Run("fire('mousedown', guideWindow().querySelector('.fg-bar'), { clientX: 700, clientY: 50 })");
+        page.Forget();
+        page.Poll();
+
+        Assert.Equal(new PageCommand[] { new PageCommand.Dragging() }, page.Sent);
+        Assert.Equal("block", page.Text("document.getElementById('fg-shield').style.display"));
+    }
+
+    [Fact]
+    public void A_new_view_keeps_the_window_where_the_player_put_it()
+    {
+        var page = Opened();
+
+        page.Run("dragFrom(guideWindow().querySelector('.fg-bar'), 500, 100, 400, 100)");
+        page.Setup(ViewOf(Online));
+        page.Forget();
+        page.Poll();
+
+        Assert.Contains(new PageCommand.Shown(new NormalRect(0.5, 0.08, 0.36, 0.8)), page.Sent);
+    }
+
+    [Fact]
+    public void A_finished_download_reloads_the_same_page_from_the_offline_copy()
+    {
+        var page = Opened();
+
+        page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: true, item: { cfgId: 5 } } })");
+        page.Lookup();
+        page.Setup(ViewOf(Local));
+
+        Assert.Equal(Local + "/en/go/?item=5", page.Text("guideFrame().src"));
+        Assert.Equal("Offline copy", page.Text("guideWindow().querySelector('.fg-chip').textContent"));
+    }
+
+    // ===== Offline with no copy =====
+
+    [Fact]
+    public void Offline_without_a_copy_offers_the_download_instead_of_the_site()
+    {
+        var page = Ready(null, new OfflineState.Missing(149_926_714));
+
+        page.Toggle();
+        page.Click("guideWindow().querySelector('.fg-empty').querySelector('.fg-get')");
+
+        Assert.True(page.Is("guideWindow().querySelector('.fg-body').classList.contains('is-empty')"));
+        Assert.Equal("Download for offline (150 MB)", page.Text("guideWindow().querySelector('.fg-empty').querySelector('.fg-get').textContent"));
+        Assert.Contains(new PageCommand.Download(), page.Sent);
+    }
+
+    [Fact]
+    public void A_download_in_progress_cannot_be_started_twice()
+    {
+        var page = Ready(null, new OfflineState.Downloading(30));
+
+        page.Toggle();
+        page.Click("guideWindow().querySelector('.fg-bar').querySelector('.fg-get')");
+
+        Assert.DoesNotContain(new PageCommand.Download(), page.Sent);
+    }
+
+    // ===== Looking up what the pointer is over =====
+
+    [Fact]
+    public void The_hotkey_over_a_backpack_item_opens_that_item()
+    {
+        var page = Ready();
+
+        page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: true, item: { cfgId: 1201 } } })");
+        page.Lookup();
+
+        Assert.Equal(Online + "/en/go/?item=1201", page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_hidden_backpack_tooltip_is_not_a_hover()
+    {
+        var page = Ready();
+
+        page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: false, item: { cfgId: 1201 } } })");
+        page.Lookup();
+
+        Assert.Equal(Online + "/en/", page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_trader_shelf_item_is_named_by_its_id_and_a_bag_item_by_its_config_id()
+    {
+        var page = Ready();
+
+        page.Run("var shelfItem = { id: 55, cfgId: 9001 }; var trade = vuePage('file:///game/WebUI/UI/TradeUI/TradeUI.html', { shelf: { items: [shelfItem] }, tooltipState: { visible: true, item: shelfItem } })");
+        page.Lookup();
+        Assert.Equal(Online + "/en/go/?item=55", page.Text("guideFrame().src"));
+
+        page.Run("trade.getElementById('app')._vnode.component.setupState.tooltipState.item = { id: 777, cfgId: 56 }");
+        page.Lookup();
+        Assert.Equal(Online + "/en/go/?item=56", page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void The_hotkey_over_a_map_marker_opens_that_place()
+    {
+        var page = Ready();
+
+        // The locked location has no marker on the explore map, so the first marker is the second location.
+        page.Run("var map = openMap('ExploreMap', [{ configId: 10, lockState: 2 }, { configId: 11, lockState: 0 }, { configId: 12, lockState: 0, isActive: true }])");
+        page.Poll();
+        page.Run("fire('mouseover', marker(map, 0))");
+        page.Lookup();
+
+        Assert.Equal(Online + "/en/go/?place=11", page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void Over_no_marker_the_selected_place_is_looked_up()
+    {
+        var page = Ready();
+
+        page.Run("var map = openMap('PreDisasterMap', [{ configId: 20 }, { configId: 21, isActive: true }])");
+        page.Poll();
+        page.Run("fire('mouseover', map.body)");
+        page.Lookup();
+
+        Assert.Equal(Online + "/en/go/?place=21", page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void The_lookup_uses_the_game_language()
+    {
+        var page = new PageScript();
+
+        page.Setup(ViewOf(Online, isChinese: true));
+        page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: true, item: { cfgId: 3 } } })");
+        page.Lookup();
+
+        Assert.Equal(Online + "/zh/go/?item=3", page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void The_hotkey_over_nothing_toggles_the_window()
+    {
+        var page = Ready();
+
+        page.Lookup();
+        Assert.True(page.Is("guideWindow().classList.contains('is-open')"));
+
+        page.Lookup();
+        Assert.False(page.Is("guideWindow().classList.contains('is-open')"));
+    }
+
+    // ===== The phone app =====
+
+    private static PageScript WithPhone(string? siteBase = Online, OfflineState? state = null)
+    {
+        var page = Ready(siteBase, state);
+
+        page.Run("openPhone()");
+        page.Poll();
+
+        return page;
+    }
+
+    [Fact]
+    public void The_phone_home_screen_gets_one_field_guide_app()
+    {
+        var page = WithPhone();
+
+        page.Poll();
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+        Assert.Equal("Field Guide", page.Text("phonePage().querySelector('.fg-app').querySelector('.app-label').textContent"));
+    }
+
+    [Fact]
+    public void The_phone_app_shows_the_site_in_the_phone_and_holds_the_keyboard()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+
+        Assert.Equal(Online + "/en/", page.Text("phonePage().querySelector('.fg-phone-frame').src"));
+        Assert.Contains(new PageCommand.Phone(true), page.Sent);
+    }
+
+    [Fact]
+    public void Back_closes_the_phone_app_and_gives_the_keyboard_back()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Click("phonePage().querySelector('.fg-phone-back')");
+
+        Assert.False(page.Is("phonePage().querySelector('.fg-phone')"));
+        Assert.Equal(new PageCommand.Phone(false), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void A_phone_put_away_with_the_app_open_gives_the_keyboard_back()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Run("dropPage(/PhoneSMS/)");
+        page.Forget();
+        page.Poll();
+
+        Assert.Contains(new PageCommand.Phone(false), page.Sent);
+    }
+
+    [Fact]
+    public void The_phone_app_without_a_copy_offers_the_download_and_shows_the_site_once_it_lands()
+    {
+        var page = WithPhone(null, new OfflineState.Missing(0));
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Click("phonePage().querySelector('.fg-phone-get')");
+
+        Assert.Contains(new PageCommand.Download(), page.Sent);
+
+        page.Setup(ViewOf(Local));
+
+        Assert.Equal(Local + "/en/", page.Text("phonePage().querySelector('.fg-phone-frame').src"));
+        Assert.False(page.Is("phonePage().querySelector('.fg-phone-get')"));
+    }
+}
