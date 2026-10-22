@@ -15,6 +15,12 @@
   var PHONE_STYLE_ID = 'fg-phone-style';
   var MIN_W = 0.15;
   var MIN_H = 0.2;
+  // The site's text size in the window, in percent (TextSize.cs).
+  var TEXT_MIN = 50;
+  var TEXT_MAX = 150;
+  var TEXT_STEP = 10;
+  // The site shows only its name and search box in a frame with this name, since the window has its own Home.
+  var FRAME_NAME = 'field-guide';
   var GRIPS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
   var SVG_NS = 'http://www.w3.org/2000/svg';
   // An open book, drawn on the 24-unit grid the game's HUD icons use; filled, holes by the even-odd rule.
@@ -24,13 +30,14 @@
   // The plugin hands over the words in the game's language before every call (Texts.cs); English stands in until then.
   var ENGLISH = {
     title: 'Field Guide', tip: 'The Survival Log Database. Hover an item or a map location and press {0} to look it up',
-    home: 'Home', close: 'Close', back: 'Back',
+    home: 'Home', close: 'Close', back: 'Back', smaller: 'Smaller text', bigger: 'Larger text',
     needCopy: 'Source is set to Offline and there is no offline copy yet. Download it here, or set Source to Auto to read the site online.'
   };
 
-  var view = { base: null, lang: 'en', layout: { x: 0.6, y: 0.08, w: 0.36, h: 0.8 }, source: null, action: null, canDownload: false, hotkey: '/' };
+  var view = { base: null, lang: 'en', layout: { x: 0.6, y: 0.08, w: 0.36, h: 0.8 }, textSize: 80, source: null, action: null, canDownload: false, hotkey: '/' };
   var hasView = false;
   var rect = null;
+  var textSize = null;
   var ui = null;
   var drag = null;
   var isOpen = false;
@@ -94,7 +101,7 @@
     '.fg-btn:disabled{opacity:.6;cursor:default}',
     '.fg-x{border:none;font-size:18px;line-height:18px;padding:2px 8px}',
     '.fg-body{flex:1;position:relative;background:#16130f}',
-    '.fg-frame{position:absolute;left:0;top:0;width:100%;height:100%;border:0;background:#16130f}',
+    '.fg-frame{position:absolute;left:0;top:0;width:100%;height:100%;border:0;background:#16130f;transform-origin:0 0}',
     '.fg-empty{position:absolute;left:0;top:0;right:0;bottom:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;color:#c8c8c8;font-size:14px;text-align:center}',
     '.fg-body.is-empty .fg-empty{display:flex}',
     '.fg-body.is-empty .fg-frame{display:none}',
@@ -122,11 +129,14 @@
     var shield = make(document, 'div');
 
     root.id = 'fg-win';
+    frame.name = FRAME_NAME;
     shield.id = 'fg-shield';
     bar.appendChild(make(document, 'span', 'fg-title'));
     bar.appendChild(make(document, 'span', 'fg-chip'));
     bar.appendChild(actButton('download', 'fg-btn fg-get'));
     bar.appendChild(make(document, 'span', 'fg-gap'));
+    bar.appendChild(actButton('smaller', 'fg-btn fg-smaller', 'A-'));
+    bar.appendChild(actButton('bigger', 'fg-btn fg-bigger', 'A+'));
     bar.appendChild(actButton('home', 'fg-btn fg-home'));
     bar.appendChild(actButton('close', 'fg-btn fg-x', '\u00d7'));
     empty.appendChild(make(document, 'div', 'fg-empty-text'));
@@ -182,6 +192,8 @@
     ui.root.querySelector('.fg-title').textContent = say('title');
     ui.root.querySelector('.fg-home').textContent = say('home');
     ui.root.querySelector('.fg-x').title = say('close');
+    ui.root.querySelector('.fg-smaller').title = say('smaller');
+    ui.root.querySelector('.fg-bigger').title = say('bigger');
     ui.root.querySelector('.fg-empty-text').textContent = say('needCopy');
     chip.textContent = view.source || '';
     chip.style.display = view.source ? '' : 'none';
@@ -191,6 +203,27 @@
       node.disabled = !view.canDownload;
     });
     ui.body.className = view.base ? 'fg-body' : 'fg-body is-empty';
+    scaleFrame();
+  }
+
+  // The frame is laid out larger and shrunk back to the window, so the site reflows to the size it is read at.
+  function scaleFrame() {
+    var scale = textSize / 100;
+    var style = ui.frame.style;
+
+    style.width = round(100 / scale) + '%';
+    style.height = round(100 / scale) + '%';
+    style.transform = 'scale(' + round(scale) + ')';
+  }
+
+  function resizeText(step) {
+    var next = clamp(textSize + step, TEXT_MIN, TEXT_MAX);
+
+    if (next === textSize) return;
+
+    textSize = next;
+    scaleFrame();
+    send('textsize|' + textSize);
   }
 
   function place() {
@@ -251,6 +284,8 @@
 
     if (act === 'close') close();
     else if (act === 'home') navigate(homePath());
+    else if (act === 'smaller') resizeText(-TEXT_STEP);
+    else if (act === 'bigger') resizeText(TEXT_STEP);
     else if (act === 'download') send('download');
   }
 
@@ -315,6 +350,7 @@
     view = next;
 
     if (!hasView || !rect) rect = next.layout;
+    if (!hasView || textSize === null) textSize = next.textSize;
 
     hasView = true;
     render();

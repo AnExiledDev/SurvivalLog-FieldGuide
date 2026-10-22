@@ -10,6 +10,7 @@ internal sealed class GuideSettings
     private readonly ConfigEntry<KeyCode> _hotkey;
     private readonly ConfigEntry<SiteSource> _source;
     private readonly ConfigEntry<string> _window;
+    private readonly ConfigEntry<int> _textSize;
 
     public GuideSettings(ConfigFile config)
     {
@@ -22,6 +23,11 @@ internal sealed class GuideSettings
         _window = config.Bind("Window", "Layout", WindowLayout.Default.Format(),
             "Where the window sits and its size, as fractions of the screen: left, top, width, height. Saved when you move or resize the window.\n" +
             "窗口的位置和大小，以屏幕比例表示：左、上、宽、高。移动或调整窗口大小时自动保存。");
+        _textSize = config.Bind("Window", "TextSize", Core.TextSize.Default,
+            new ConfigDescription(
+                "How big the site's text is in the window, in percent. The A- and A+ buttons on the title bar change it and save it here.\n" +
+                "窗口中网站文字的大小（百分比）。标题栏的 A- 和 A+ 按钮会调整并保存此值。",
+                new AcceptableValueRange<int>(Core.TextSize.Min, Core.TextSize.Max)));
     }
 
     public KeyCode Hotkey => _hotkey.Value;
@@ -32,6 +38,10 @@ internal sealed class GuideSettings
     public SiteSource Source => _source.Value;
 
     public WindowLayout Layout => WindowLayout.Parse(_window.Value);
+
+    public int TextSize => Core.TextSize.Clamp(_textSize.Value);
+
+    public void SaveTextSize(int percent) => _textSize.Value = Core.TextSize.Clamp(percent);
 
     public void SaveLayout(WindowLayout layout) => _window.Value = layout.Format();
 }

@@ -9,8 +9,8 @@ public class PageScriptTests
     private const string Online = GuideView.OnlineBase;
     private const string Local = "http://127.0.0.1:5123";
 
-    private static string ViewOf(string? siteBase, OfflineState? state = null, bool isChinese = false) =>
-        GuideView.Json(siteBase, isChinese, WindowLayout.Default, state ?? new OfflineState.Ready("v1", 0), "/");
+    private static string ViewOf(string? siteBase, OfflineState? state = null, bool isChinese = false, int textSize = TextSize.Default) =>
+        GuideView.Json(siteBase, isChinese, WindowLayout.Default, textSize, state ?? new OfflineState.Ready("v1", 0), "/");
 
     private static PageScript Ready(string? siteBase = Online, OfflineState? state = null)
     {
@@ -125,6 +125,52 @@ public class PageScriptTests
         page.Run("dragFrom(guideWindow().querySelector('.fg-w'), 600, 100, 1500, 100)");
 
         Assert.Contains(new PageCommand.Moved(new WindowLayout(0.81, 0.08, 0.15, 0.8)), page.Sent);
+    }
+
+    [Fact]
+    public void The_site_is_drawn_at_the_saved_text_size_and_still_fills_the_window()
+    {
+        var page = new PageScript();
+
+        page.Setup(ViewOf(Online, textSize: 50));
+        page.Toggle();
+
+        Assert.Equal("scale(0.5)", page.Text("guideFrame().style.transform"));
+        Assert.Equal("200%", page.Text("guideFrame().style.width"));
+        Assert.Equal("200%", page.Text("guideFrame().style.height"));
+    }
+
+    [Fact]
+    public void Larger_text_grows_the_site_and_saves_the_new_size()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('bigger')");
+
+        Assert.Equal("scale(0.9)", page.Text("guideFrame().style.transform"));
+        Assert.Equal(new PageCommand.TextSized(90), page.Sent.Single());
+    }
+
+    [Fact]
+    public void Smaller_text_stops_at_the_smallest_size()
+    {
+        var page = new PageScript();
+
+        page.Setup(ViewOf(Online, textSize: TextSize.Min));
+        page.Toggle();
+        page.Forget();
+        page.Click("windowButton('smaller')");
+
+        Assert.Equal("scale(0.5)", page.Text("guideFrame().style.transform"));
+        Assert.Empty(page.Sent.OfType<PageCommand.TextSized>());
+    }
+
+    [Fact]
+    public void The_window_frame_carries_the_name_the_site_shows_its_short_header_for()
+    {
+        var page = Opened();
+
+        Assert.Equal("field-guide", page.Text("guideFrame().name"));
     }
 
     [Fact]

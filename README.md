@@ -5,7 +5,7 @@ A BepInEx mod for Survival Log. Read the [Survival Log Database](https://sldb.co
 ## What it does
 
 - **Look things up with `/`:** hover an item in your backpack or on a trader's shelf, or a location on the map, and press `/` to open its page. Over nothing, `/` opens or closes the window.
-- **A window you place yourself:** drag it by its title bar and resize it from any edge or corner. It opens where you left it, at the size you left it.
+- **A window you place yourself:** drag it by its title bar and resize it from any edge or corner. It opens where you left it, at the size you left it. `A-` and `A+` on the title bar make the text smaller or larger.
 - **Book button on the HUD:** a book button in the bottom-left tool column opens and closes the window.
 - **Phone app:** the phone's home screen gets a Field Guide app that shows the site's phone layout. `Back` closes it.
 - **Offline copy:** the title bar offers `Download for offline` (about 150 MB). Once downloaded, the guide reads the copy on your PC, no internet needed, and offers an update when the site has a newer one.
@@ -34,7 +34,7 @@ See [CONFIG.md](CONFIG.md).
 
 ## Troubleshooting
 
-The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.1.0 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
+The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.1.1 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
 
 ## Feedback
 

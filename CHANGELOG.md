@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- The site's text starts smaller in the window, and `A-` and `A+` on the title bar change its size.
+- The window shows only the site's name and search box at the top, without the menu.
+- Fixed the offline download failing with a checksum error after the site was updated.
+
 ## 0.1.0
 
 - First version.

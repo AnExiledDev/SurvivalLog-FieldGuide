@@ -81,6 +81,12 @@ public static class Offline
     };
 
     /// <summary>"96 MB": what the download button says it will cost.</summary>
+    /// <summary>
+    /// The bundle is asked for by its checksum. Cloudflare keeps a zip for hours, so a plain address can hand back the
+    /// copy from an earlier build of the site, which then fails the check against the current version.json.
+    /// </summary>
+    public static string BundleAddress(string siteBase, BundleInfo bundle) => siteBase + "/offline/field-guide-site.zip?v=" + bundle.Sha256;
+
     public static string Megabytes(long bytes) => Math.Max(1, (long)Math.Round(bytes / 1_000_000.0)).ToString(CultureInfo.InvariantCulture) + " MB";
 
     /// <summary>The download as a whole percent, never 100 until it is done.</summary>

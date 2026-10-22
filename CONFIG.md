@@ -19,3 +19,4 @@ Settings live in `BepInEx\config\com.dev.survivallog.fieldguide.cfg`, created th
 | Setting | Default | What it does |
 | --- | --- | --- |
 | `Layout` | `0.6,0.08,0.36,0.8` | Where the window sits and its size, as fractions of the screen: left, top, width, height. Saved whenever you move or resize the window, so there is no need to edit it by hand. |
+| `TextSize` | `80` | How big the site's text is in the window, in percent (50 to 150). The `A-` and `A+` buttons on the title bar change it and save it here. |

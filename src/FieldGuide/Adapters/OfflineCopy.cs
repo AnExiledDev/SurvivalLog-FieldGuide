@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -17,7 +18,6 @@ namespace FieldGuide.Adapters;
 internal sealed class OfflineCopy
 {
     private const string InfoUrl = GuideView.OnlineBase + "/offline/version.json";
-    private const string BundleUrl = GuideView.OnlineBase + "/offline/field-guide-site.zip";
 
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromMinutes(30) };
 
@@ -116,7 +116,7 @@ internal sealed class OfflineCopy
 
     private async Task<BundleInfo> FetchInfo()
     {
-        var json = await Http.GetStringAsync(InfoUrl);
+        var json = await Http.GetStringAsync(InfoUrl + "?t=" + DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
 
         return BundleInfo.TryParse(json, out var info) ? info : throw new InvalidDataException("the site's version.json could not be read");
     }
@@ -129,7 +129,7 @@ internal sealed class OfflineCopy
         var old = Path.Combine(_folder, "site-old");
 
         Directory.CreateDirectory(_folder);
-        await Fetch(zip, info.Bytes);
+        await Fetch(Offline.BundleAddress(GuideView.OnlineBase, info), zip, info.Bytes);
 
         if (!string.Equals(Sha256(zip), info.Sha256, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("the download does not match the site's checksum");
 
@@ -147,9 +147,9 @@ internal sealed class OfflineCopy
         return info.Version;
     }
 
-    private async Task Fetch(string path, long expectedBytes)
+    private async Task Fetch(string url, string path, long expectedBytes)
     {
-        using var response = await Http.GetAsync(BundleUrl, HttpCompletionOption.ResponseHeadersRead);
+        using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
 
         response.EnsureSuccessStatusCode();
 

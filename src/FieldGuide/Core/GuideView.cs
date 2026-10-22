@@ -5,8 +5,8 @@ public readonly record struct OfflineButton(string? Label, bool CanDownload);
 
 /// <summary>
 /// Everything the page script needs to draw the window and the phone app, as one JSON object: where pages come from
-/// (null when the player chose Offline and has no copy), the site language, where the window sits, and the offline
-/// button.
+/// (null when the player chose Offline and has no copy), the site language, where the window sits and how big its
+/// text is, and the offline button.
 /// </summary>
 public static class GuideView
 {
@@ -23,7 +23,7 @@ public static class GuideView
         _ => new(null, false),
     };
 
-    public static string Json(string? siteBase, bool isChinese, WindowLayout layout, OfflineState state, string hotkey)
+    public static string Json(string? siteBase, bool isChinese, WindowLayout layout, int textSize, OfflineState state, string hotkey)
     {
         var button = Button(state, isChinese);
         var source = siteBase == null ? null : Texts.Get(siteBase == OnlineBase ? "online" : "offline", isChinese);
@@ -31,6 +31,7 @@ public static class GuideView
         return "{\"base\":" + Literal(siteBase) +
                ",\"lang\":" + JsText.Literal(isChinese ? "zh" : "en") +
                ",\"layout\":" + layout.Json() +
+               ",\"textSize\":" + TextSize.Clamp(textSize).ToString(System.Globalization.CultureInfo.InvariantCulture) +
                ",\"source\":" + Literal(source) +
                ",\"action\":" + Literal(button.Label) +
                ",\"canDownload\":" + (button.CanDownload ? "true" : "false") +

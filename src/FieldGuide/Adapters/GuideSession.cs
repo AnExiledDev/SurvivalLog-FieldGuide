@@ -82,6 +82,9 @@ internal sealed class GuideSession
             case PageCommand.Moved moved:
                 _settings.SaveLayout(moved.Layout);
                 break;
+            case PageCommand.TextSized sized:
+                _settings.SaveTextSize(sized.Percent);
+                break;
             case PageCommand.Download:
                 _offline.Download();
                 break;
@@ -120,7 +123,7 @@ internal sealed class GuideSession
         _nextViewCheckAt = now + ViewCheckSeconds;
 
         var isChinese = GameLanguage.IsChinese();
-        var view = GuideView.Json(SiteBase(), isChinese, _settings.Layout, _offline.State, _settings.HotkeyName);
+        var view = GuideView.Json(SiteBase(), isChinese, _settings.Layout, _settings.TextSize, _offline.State, _settings.HotkeyName);
 
         if (view == _sentView) return;
         if (_page.Setup(view, isChinese)) _sentView = view;

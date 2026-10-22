@@ -28,7 +28,17 @@ public class PageCommandTests
     }
 
     [Theory]
-    [InlineData("slmod|fieldguide|shown|1,2,3")]
+    [InlineData("slmod|fieldguide|textsize|90", 90)]
+    [InlineData("slmod|fieldguide|textsize|10", TextSize.Min)]
+    [InlineData("slmod|fieldguide|textsize|900", TextSize.Max)]
+    public void A_text_size_is_kept_within_what_stays_readable(string message, int percent)
+    {
+        Assert.Equal(new PageCommand.TextSized(percent), PageCommand.Parse(message));
+    }
+
+    [Theory]
+    [InlineData("slmod|fieldguide|textsize|-20")]
+    [InlineData("slmod|fieldguide|textsize|big")]
     [InlineData("slmod|fieldguide|shown|a,b,c,d")]
     [InlineData("slmod|fieldguide|shown|NaN,0,1,1")]
     [InlineData("slmod|fieldguide|phone|yes")]
@@ -198,6 +208,16 @@ public class OfflineTests
     }
 
     [Fact]
+    public void The_bundle_is_asked_for_by_its_checksum_so_a_cached_older_zip_is_never_served()
+    {
+        var older = new BundleInfo("v1", 1, new string('a', 64));
+        var newer = new BundleInfo("v2", 1, new string('b', 64));
+
+        Assert.NotEqual(Offline.BundleAddress(GuideView.OnlineBase, older), Offline.BundleAddress(GuideView.OnlineBase, newer));
+        Assert.StartsWith(GuideView.OnlineBase + "/offline/field-guide-site.zip?", Offline.BundleAddress(GuideView.OnlineBase, newer));
+    }
+
+    [Fact]
     public void A_download_shows_99_until_it_is_done()
     {
         Assert.Equal(99, Offline.Percent(999, 1000));
@@ -235,6 +255,12 @@ public class GuideViewTests
     }
 
     [Fact]
+    public void The_view_carries_the_saved_text_size_kept_in_range()
+    {
+        Assert.Contains("\"textSize\":150", GuideView.Json(null, false, WindowLayout.Default, 400, new OfflineState.Missing(0), "/"));
+    }
+
+    [Fact]
     public void The_button_follows_the_game_language()
     {
         Assert.Equal("下载中 40%", GuideView.Button(new OfflineState.Downloading(40), true).Label);
@@ -245,9 +271,9 @@ public class GuideViewTests
     {
         var state = new OfflineState.Ready("v1", 0);
 
-        Assert.Contains("\"source\":\"Online\"", GuideView.Json(GuideView.OnlineBase, false, WindowLayout.Default, state, "/"));
-        Assert.Contains("\"source\":\"Offline copy\"", GuideView.Json("http://127.0.0.1:5123", false, WindowLayout.Default, state, "/"));
-        Assert.Contains("\"base\":null", GuideView.Json(null, false, WindowLayout.Default, new OfflineState.Missing(0), "/"));
+        Assert.Contains("\"source\":\"Online\"", GuideView.Json(GuideView.OnlineBase, false, WindowLayout.Default, TextSize.Default, state, "/"));
+        Assert.Contains("\"source\":\"Offline copy\"", GuideView.Json("http://127.0.0.1:5123", false, WindowLayout.Default, TextSize.Default, state, "/"));
+        Assert.Contains("\"base\":null", GuideView.Json(null, false, WindowLayout.Default, TextSize.Default, new OfflineState.Missing(0), "/"));
     }
 }
 

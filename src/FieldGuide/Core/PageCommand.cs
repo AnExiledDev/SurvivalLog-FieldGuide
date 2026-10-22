@@ -36,6 +36,9 @@ public abstract record PageCommand
     /// <summary>The player moved or resized the window; the place to open it next time.</summary>
     public sealed record Moved(WindowLayout Layout) : PageCommand;
 
+    /// <summary>The player pressed A- or A+; the text size to open the window with next time.</summary>
+    public sealed record TextSized(int Percent) : PageCommand;
+
     /// <summary>The download button: fetch the offline copy, or a newer one.</summary>
     public sealed record Download : PageCommand;
 
@@ -62,6 +65,7 @@ public abstract record PageCommand
             ("dragging", 1) => new Dragging(),
             ("hidden", 1) => new Hidden(),
             ("moved", 2) when TryRect(parts[1], out var rect) => new Moved(WindowLayout.Clamp(rect)),
+            ("textsize", 2) when int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out var percent) => new TextSized(TextSize.Clamp(percent)),
             ("download", 1) => new Download(),
             ("phone", 2) when parts[1] is "1" or "0" => new Phone(parts[1] == "1"),
             _ => new Unknown(message),
