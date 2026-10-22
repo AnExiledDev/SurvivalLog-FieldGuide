@@ -21,6 +21,7 @@
   var TEXT_STEP = 10;
   // The site shows only its name and search box in a frame with this name, since the window has its own Home.
   var FRAME_NAME = 'field-guide';
+  var PHONE_FRAME_NAME = 'field-guide-phone';
   var GRIPS = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
   var SVG_NS = 'http://www.w3.org/2000/svg';
   // An open book, drawn on the 24-unit grid the game's HUD icons use; filled, holes by the even-odd rule.
@@ -81,6 +82,15 @@
 
   function rectText(r) {
     return [r.x, r.y, r.w, r.h].map(round).join(',');
+  }
+
+  // The live site's analytics count a visit as the Field Guide's by its utm tags; the offline copy has no analytics.
+  function siteAddress(to, medium) {
+    if (!view.campaign) return view.base + to;
+
+    var joiner = to.indexOf('?') < 0 ? '?' : '&';
+
+    return view.base + to + joiner + view.campaign + '&utm_medium=' + medium;
   }
 
   function homePath() {
@@ -238,7 +248,7 @@
   function navigate(to) {
     path = to;
 
-    if (view.base) ui.frame.src = view.base + to;
+    if (view.base) ui.frame.src = siteAddress(to, 'window');
   }
 
   function open(to) {
@@ -686,8 +696,9 @@
   function phoneSite(doc) {
     var site = make(doc, 'iframe', 'fg-phone-slot fg-phone-frame');
 
+    site.name = PHONE_FRAME_NAME;
     site.setAttribute('data-base', view.base);
-    site.src = view.base + phone.path;
+    site.src = siteAddress(phone.path, 'phone');
 
     return site;
   }

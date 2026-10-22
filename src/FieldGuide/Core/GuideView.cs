@@ -5,12 +5,15 @@ public readonly record struct OfflineButton(string? Label, bool CanDownload);
 
 /// <summary>
 /// Everything the page script needs to draw the window and the phone app, as one JSON object: where pages come from
-/// (null when the player chose Offline and has no copy), the site language, where the window sits and how big its
+/// (null when the player chose Offline and has no copy), the analytics tag for live-site addresses, the site language, where the window sits and how big its
 /// text is, and the offline button.
 /// </summary>
 public static class GuideView
 {
     public const string OnlineBase = "https://sldb.core-directive.com";
+
+    /// <summary>Added to every live-site address so the site's analytics can tell Field Guide visits from others.</summary>
+    public const string Campaign = "utm_source=field-guide";
 
     public static OfflineButton Button(OfflineState state, bool isChinese) => state switch
     {
@@ -29,6 +32,7 @@ public static class GuideView
         var source = siteBase == null ? null : Texts.Get(siteBase == OnlineBase ? "online" : "offline", isChinese);
 
         return "{\"base\":" + Literal(siteBase) +
+               ",\"campaign\":" + Literal(siteBase == OnlineBase ? Campaign : null) +
                ",\"lang\":" + JsText.Literal(isChinese ? "zh" : "en") +
                ",\"layout\":" + layout.Json() +
                ",\"textSize\":" + TextSize.Clamp(textSize).ToString(System.Globalization.CultureInfo.InvariantCulture) +

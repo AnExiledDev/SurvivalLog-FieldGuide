@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Pages opened from the live site are marked as Field Guide visits in the site's visitor statistics, so the site can see how much the guide is used in game. The offline copy sends nothing.
+
 ## 0.1.1
 
 - The site's text starts smaller in the window, and `A-` and `A+` on the title bar change its size.

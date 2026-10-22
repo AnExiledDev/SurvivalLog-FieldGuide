@@ -9,6 +9,11 @@ public class PageScriptTests
     private const string Online = GuideView.OnlineBase;
     private const string Local = "http://127.0.0.1:5123";
 
+    // Live-site pages carry the Field Guide's utm tags so the site's analytics can count its visits.
+    private static string InWindow(string path) => Online + path + (path.Contains('?') ? "&" : "?") + "utm_source=field-guide&utm_medium=window";
+
+    private static string OnPhone(string path) => Online + path + "?utm_source=field-guide&utm_medium=phone";
+
     private static string ViewOf(string? siteBase, OfflineState? state = null, bool isChinese = false, int textSize = TextSize.Default) =>
         GuideView.Json(siteBase, isChinese, WindowLayout.Default, textSize, state ?? new OfflineState.Ready("v1", 0), "/");
 
@@ -65,7 +70,7 @@ public class PageScriptTests
         page.Toggle();
 
         Assert.True(page.Is("guideWindow().classList.contains('is-open')"));
-        Assert.Equal(Online + "/en/", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
         Assert.Contains(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.8)), page.Sent);
     }
 
@@ -88,7 +93,7 @@ public class PageScriptTests
         page.Run("guideFrame().src = 'elsewhere'");
         page.Click("windowButton('home')");
 
-        Assert.Equal(Online + "/en/", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
     }
 
     [Fact]
@@ -269,7 +274,7 @@ public class PageScriptTests
         page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: true, item: { cfgId: 1201 } } })");
         page.Lookup();
 
-        Assert.Equal(Online + "/en/go/?item=1201", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/go/?item=1201"), page.Text("guideFrame().src"));
     }
 
     [Fact]
@@ -280,7 +285,7 @@ public class PageScriptTests
         page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: false, item: { cfgId: 1201 } } })");
         page.Lookup();
 
-        Assert.Equal(Online + "/en/", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
     }
 
     [Fact]
@@ -290,11 +295,11 @@ public class PageScriptTests
 
         page.Run("var shelfItem = { id: 55, cfgId: 9001 }; var trade = vuePage('file:///game/WebUI/UI/TradeUI/TradeUI.html', { shelf: { items: [shelfItem] }, tooltipState: { visible: true, item: shelfItem } })");
         page.Lookup();
-        Assert.Equal(Online + "/en/go/?item=55", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/go/?item=55"), page.Text("guideFrame().src"));
 
         page.Run("trade.getElementById('app')._vnode.component.setupState.tooltipState.item = { id: 777, cfgId: 56 }");
         page.Lookup();
-        Assert.Equal(Online + "/en/go/?item=56", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/go/?item=56"), page.Text("guideFrame().src"));
     }
 
     [Fact]
@@ -308,7 +313,7 @@ public class PageScriptTests
         page.Run("fire('mouseover', marker(map, 0))");
         page.Lookup();
 
-        Assert.Equal(Online + "/en/go/?place=11", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/go/?place=11"), page.Text("guideFrame().src"));
     }
 
     [Fact]
@@ -321,7 +326,7 @@ public class PageScriptTests
         page.Run("fire('mouseover', map.body)");
         page.Lookup();
 
-        Assert.Equal(Online + "/en/go/?place=21", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/en/go/?place=21"), page.Text("guideFrame().src"));
     }
 
     [Fact]
@@ -333,7 +338,7 @@ public class PageScriptTests
         page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: true, item: { cfgId: 3 } } })");
         page.Lookup();
 
-        Assert.Equal(Online + "/zh/go/?item=3", page.Text("guideFrame().src"));
+        Assert.Equal(InWindow("/zh/go/?item=3"), page.Text("guideFrame().src"));
     }
 
     [Fact]
@@ -346,6 +351,16 @@ public class PageScriptTests
 
         page.Lookup();
         Assert.False(page.Is("guideWindow().classList.contains('is-open')"));
+    }
+
+    [Fact]
+    public void The_offline_copy_opens_plain_addresses_since_it_has_no_analytics()
+    {
+        var page = Ready(Local);
+
+        page.Toggle();
+
+        Assert.Equal(Local + "/en/", page.Text("guideFrame().src"));
     }
 
     // ===== The phone app =====
@@ -378,7 +393,8 @@ public class PageScriptTests
 
         page.Click("phonePage().querySelector('.fg-app')");
 
-        Assert.Equal(Online + "/en/", page.Text("phonePage().querySelector('.fg-phone-frame').src"));
+        Assert.Equal(OnPhone("/en/"), page.Text("phonePage().querySelector('.fg-phone-frame').src"));
+        Assert.Equal("field-guide-phone", page.Text("phonePage().querySelector('.fg-phone-frame').name"));
         Assert.Contains(new PageCommand.Phone(true), page.Sent);
     }
 
