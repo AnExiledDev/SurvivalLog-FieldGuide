@@ -164,7 +164,7 @@
     '.fg-x{border:none;font-size:14px;line-height:14px;padding:0 5px}',
     '.fg-win-btn{border:none;padding:2px 4px;line-height:0}',
     '.fg-icon{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.2}',
-    '#fg-win.is-min .fg-body,#fg-win.is-min .fg-grip,#fg-win.is-min .fg-gap,#fg-win.is-max .fg-grip{display:none}',
+    '#fg-win.is-min .fg-body,#fg-win.is-min .fg-grip,#fg-win.is-min .fg-gap,#fg-win.is-min .fg-get,#fg-win.is-max .fg-grip{display:none}',
     '#fg-win.is-max{border-radius:0}',
     '#fg-win.is-max .fg-bar{cursor:default}',
     '.fg-body{flex:1;position:relative;background:#16130f}',

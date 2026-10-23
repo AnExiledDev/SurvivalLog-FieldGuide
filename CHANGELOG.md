@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- The minimized title bar no longer shows the offline download button.
+
 ## 0.1.5
 
 - A minimized window shrinks to just its title and buttons, kept at the window's right edge so the restore button stays where minimize was. Restoring brings back the full size.
