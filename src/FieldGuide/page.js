@@ -36,7 +36,7 @@
     expand: 'M6 1.5h2.5V4M8.5 1.5L5.5 4.5M4 8.5H1.5V6M1.5 8.5l3-3'
   };
   // The title bar's height with the window's border, which is all a minimized window keeps.
-  var BAR_PX = 32;
+  var BAR_PX = 22;
   // The site names the page it is on in a message to the game's root page (src/designs/depot/Frame.astro).
   var SITE_AT = 'slfg-at|';
   // The plugin hands over the words in the game's language before every call (Texts.cs); English stands in until then.
@@ -154,16 +154,16 @@
   var CSS = [
     '#fg-win{position:fixed;z-index:2147483000;display:none;flex-direction:column;background:#16130f;border:1px solid rgba(251,176,52,.55);border-radius:6px;box-shadow:0 8px 28px rgba(0,0,0,.6);overflow:hidden;font-family:inherit}',
     '#fg-win.is-open{display:flex}',
-    '.fg-bar{flex:none;display:flex;align-items:center;gap:6px;height:30px;padding:0 4px 0 10px;background:#2a2016;color:#fbb034;cursor:move;user-select:none;font-size:13px}',
+    '.fg-bar{flex:none;display:flex;align-items:center;gap:4px;height:20px;padding:0 2px 0 8px;background:#2a2016;color:#fbb034;cursor:move;user-select:none;font-size:11px}',
     '.fg-title{font-weight:bold;white-space:nowrap}',
-    '.fg-chip{font-size:11px;color:#c8b48a;border:1px solid rgba(251,176,52,.35);border-radius:9px;padding:1px 7px;white-space:nowrap}',
+    '.fg-chip{font-size:9px;line-height:12px;color:#c8b48a;border:1px solid rgba(251,176,52,.35);border-radius:7px;padding:0 5px;white-space:nowrap}',
     '.fg-gap{flex:1}',
-    '.fg-btn{background:transparent;color:#fbb034;border:1px solid rgba(251,176,52,.45);border-radius:4px;padding:2px 8px;font-size:12px;cursor:pointer;white-space:nowrap}',
+    '.fg-btn{background:transparent;color:#fbb034;border:1px solid rgba(251,176,52,.45);border-radius:3px;padding:0 5px;font-size:10px;line-height:14px;cursor:pointer;white-space:nowrap}',
     '.fg-btn:hover{background:rgba(251,176,52,.15)}',
     '.fg-btn:disabled{opacity:.6;cursor:default}',
-    '.fg-x{border:none;font-size:18px;line-height:18px;padding:2px 8px}',
-    '.fg-win-btn{border:none;padding:4px 6px;line-height:0}',
-    '.fg-icon{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.2}',
+    '.fg-x{border:none;font-size:14px;line-height:14px;padding:0 5px}',
+    '.fg-win-btn{border:none;padding:2px 4px;line-height:0}',
+    '.fg-icon{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.2}',
     '#fg-win.is-min .fg-body,#fg-win.is-min .fg-grip,#fg-win.is-max .fg-grip{display:none}',
     '#fg-win.is-max{border-radius:0}',
     '#fg-win.is-max .fg-bar{cursor:default}',
@@ -318,6 +318,16 @@
     style.height = isMinimized ? BAR_PX + 'px' : shown.h * 100 + 'vh';
   }
 
+  // A window minimized near the bottom edge is lifted on restore until all of it shows, and that place is saved.
+  function fitOnScreen() {
+    var top = rect ? Math.min(rect.y, 1 - rect.h) : 0;
+
+    if (!rect || top === rect.y) return;
+
+    rect = { x: rect.x, y: top, w: rect.w, h: rect.h };
+    send('moved|' + rectText(rect));
+  }
+
   // Where the window is on screen: the whole screen when maximized, its title bar alone when minimized.
   function screenRect() {
     var shown = isMaximized ? { x: 0, y: 0, w: 1, h: 1 } : rect;
@@ -329,8 +339,13 @@
 
   // Maximize and minimize change only how the window is shown, never the place the player saved.
   function setShape(maximized, minimized) {
+    var wasMinimized = isMinimized;
+
     isMaximized = maximized;
     isMinimized = minimized;
+
+    if (wasMinimized && !minimized) fitOnScreen();
+
     renderWindowButtons();
     place();
     report();
@@ -359,6 +374,7 @@
     if (ui) ui.root.classList.remove('is-open');
 
     endDrag();
+    if (isMinimized) fitOnScreen();
     isOpen = false;
     isMinimized = false;
     send('hidden');
@@ -433,7 +449,7 @@
 
   // Moves keep the size; resizes move only the edges named, never below the minimum size or off the screen.
   function dragRect(from, kind, dx, dy) {
-    if (kind === 'move') return { x: clamp(from.x + dx, 0, 1 - from.w), y: clamp(from.y + dy, 0, 1 - from.h), w: from.w, h: from.h };
+    if (kind === 'move') return { x: clamp(from.x + dx, 0, 1 - from.w), y: clamp(from.y + dy, 0, 1 - screenRect().h), w: from.w, h: from.h };
 
     var left = from.x;
     var top = from.y;
@@ -536,11 +552,83 @@
     });
   }
 
+  // The config id of every item instance the game has sent a page, by instance id. Instance ids are unique, so one map
+  // serves every page; it is emptied when it grows large, since a page resends its items whenever they change.
+  var itemConfigs = {};
+  var itemConfigCount = 0;
+  var MAX_ITEM_CONFIGS = 20000;
+  var isHearingGame = false;
+
+  function hearGame() {
+    if (isHearingGame || !window.vuplex || !window.vuplex.addEventListener) return;
+
+    isHearingGame = true;
+    window.vuplex.addEventListener('message', function (e) {
+      try {
+        learnItems(e.data);
+      } catch (err) {}
+    });
+  }
+
+  // Root.html's protocol: type 8 hands a page a message, fields split by the record separator, JSON last.
+  function learnItems(message) {
+    if (typeof message !== 'string' || message.indexOf('8\u001e') !== 0) return;
+    if (message.indexOf('"configId"') < 0 || message.indexOf('"itemId"') < 0) return;
+
+    var json = message.split('\u001e').slice(3).join('\u001e');
+
+    collectItems(JSON.parse(json));
+  }
+
+  function collectItems(node) {
+    if (!node || typeof node !== 'object') return;
+
+    if (node.itemId != null && node.configId) rememberItem(String(node.itemId), node.configId);
+
+    for (var key in node) {
+      if (Object.prototype.hasOwnProperty.call(node, key)) collectItems(node[key]);
+    }
+  }
+
+  function rememberItem(itemId, configId) {
+    if (itemConfigCount >= MAX_ITEM_CONFIGS) {
+      itemConfigs = {};
+      itemConfigCount = 0;
+    }
+
+    if (!(itemId in itemConfigs)) itemConfigCount++;
+
+    itemConfigs[itemId] = configId;
+  }
+
+  function watchItems(doc) {
+    if (doc.__fgItemsWatched) return;
+
+    doc.__fgItemsWatched = true;
+    doc.__fgItem = null;
+    doc.addEventListener('mouseover', function (e) {
+      var item = e.target && e.target.closest ? e.target.closest('.item') : null;
+
+      doc.__fgItem = item && item.id ? item.id : null;
+    });
+    // Leaving the page altogether fires no mouseover inside it, so the last item would otherwise stay hovered.
+    doc.addEventListener('mouseout', function (e) {
+      if (!e.relatedTarget) doc.__fgItem = null;
+    });
+  }
+
+  function gridItemHit(doc) {
+    var configId = doc.__fgItem ? itemConfigs[doc.__fgItem] : null;
+
+    return configId ? { kind: 'item', id: configId } : null;
+  }
+
   var LOOKUPS = [
     { pattern: /BackpackUI\.html/, hit: backpackHit },
     { pattern: /TradeUI\.html/, hit: tradeHit },
     { pattern: /ExploreMap\.html/, hit: function (doc) { return mapHit(doc, function (entry) { return entry.lockState !== 2; }); } },
-    { pattern: /PreDisasterMap\.html/, hit: function (doc) { return mapHit(doc, function () { return true; }); } }
+    { pattern: /PreDisasterMap\.html/, hit: function (doc) { return mapHit(doc, function () { return true; }); } },
+    { pattern: /\.html/, hit: gridItemHit }
   ];
 
   function hovered() {
@@ -592,12 +680,16 @@
     { pattern: /CoreUI0\.html/, patch: function (doc) { placeHudButton(doc, prepHudButton); } },
     { pattern: /CoreUI1\.html/, patch: function (doc) { placeHudButton(doc, hudButton); } },
     { pattern: /ExploreMap\.html|PreDisasterMap\.html/, patch: watchMarkers },
-    { pattern: /PhoneSMS\.html/, patch: patchPhone }
+    { pattern: /PhoneSMS\.html/, patch: patchPhone },
+    { pattern: /\.html/, patch: watchItems }
   ];
 
   // Polled because the game creates and drops its page iframes whenever it likes.
   function patchPages() {
     var docs = gameDocs();
+
+    hearGame();
+
     var isPhoneShown = false;
 
     docs.forEach(function (page) {

@@ -226,9 +226,41 @@ var document = new FakeDocument();
 // What the script posts to the plugin.
 var posted = [];
 
+// What the game sends the pages, which Root.html receives first.
+var vuplexListeners = [];
+
 window.vuplex = {
-  postMessage: function (message) { posted.push(message); }
+  postMessage: function (message) { posted.push(message); },
+  addEventListener: function (type, listener) { if (type === 'message') vuplexListeners.push(listener); }
 };
+
+// Root.html's protocol: type 8 forwards to the page with that frame id, then the message type, then its JSON.
+function unitySays(pageId, type, data) {
+  var message = ['8', pageId, type, JSON.stringify(data)].join('\u001e');
+
+  vuplexListeners.forEach(function (listener) { listener({ data: message }); });
+}
+
+// A workbench page's item grid (webui-bag.js): each item element is named by its instance id and holds an icon.
+function workbenchPage(src, itemIds) {
+  var doc = frame(src);
+  var grid = doc.body.appendChild(new FakeElement('div', doc));
+
+  grid.className = 'grid';
+  itemIds.forEach(function (itemId) {
+    var item = grid.appendChild(new FakeElement('div', doc));
+
+    item.className = 'item';
+    item.id = String(itemId);
+    item.appendChild(new FakeElement('img', doc)).className = 'icon';
+  });
+
+  return doc;
+}
+
+function itemIcon(doc, itemId) {
+  return doc.getElementById(String(itemId)).querySelector('.icon');
+}
 
 // ===== Events =====
 

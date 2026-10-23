@@ -272,8 +272,8 @@ public class PageScriptTests
 
         page.Click("windowButton('minimize')");
 
-        // The 32 px title bar on a 500 px page.
-        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.064)), page.Sent[^1]);
+        // The 22 px title bar on a 500 px page.
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.044)), page.Sent[^1]);
         Assert.True(page.Is("guideWindow().classList.contains('is-min')"));
 
         page.Toggle();
@@ -281,6 +281,38 @@ public class PageScriptTests
         Assert.True(page.Is("guideWindow().classList.contains('is-open')"));
         Assert.False(page.Is("guideWindow().classList.contains('is-min')"));
         Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.8)), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void A_minimized_window_drags_down_to_the_bottom_edge_and_comes_back_wholly_on_screen()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('minimize')");
+        page.Run("dragFrom(guideWindow().querySelector('.fg-bar'), 500, 100, 500, 900)");
+
+        // Only the bar has to stay on screen: 1 - 22/500.
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.956, 0.36, 0.044)), page.Sent.OfType<PageCommand.Shown>().Last());
+
+        page.Forget();
+        page.Click("windowButton('minimize')");
+
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.2, 0.36, 0.8)), page.Sent.OfType<PageCommand.Shown>().Last());
+        Assert.Contains(page.Sent, command => command is PageCommand.Moved moved && moved.Layout.Format() == "0.6,0.2,0.36,0.8");
+    }
+
+    [Fact]
+    public void A_window_closed_while_minimized_at_the_bottom_reopens_wholly_on_screen()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('minimize')");
+        page.Run("dragFrom(guideWindow().querySelector('.fg-bar'), 500, 100, 500, 900)");
+        page.Click("guideWindow().querySelector('.fg-x')");
+        page.Forget();
+        page.Toggle();
+
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.2, 0.36, 0.8)), page.Sent.OfType<PageCommand.Shown>().Last());
     }
 
     [Fact]
@@ -344,6 +376,53 @@ public class PageScriptTests
         page.Lookup();
 
         Assert.Equal(InWindow("/en/go/?item=1201"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void The_hotkey_over_a_workbench_item_opens_that_item_by_its_config_id()
+    {
+        var page = Ready();
+
+        page.Run("var brew = workbenchPage('file:///game/WebUI/UI/BrewPanel/BrewPanel.html', [70001, 70002])");
+        page.Poll();
+        page.Run("unitySays('BrewPanel', 'Refresh', { bag: { tabs: [{ items: [{ itemId: 70001, configId: 1201, count: 3 }, { itemId: 70002, configId: 1305 }] }] } })");
+        page.Run("fire('mouseover', itemIcon(brew, 70002))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/go/?item=1305"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_workbench_item_stops_counting_once_the_pointer_leaves_it_or_its_page()
+    {
+        var page = Ready();
+
+        page.Run("var brew = workbenchPage('file:///game/WebUI/UI/BrewPanel/BrewPanel.html', [70001])");
+        page.Poll();
+        page.Run("unitySays('BrewPanel', 'Refresh', [{ itemId: 70001, configId: 1201 }])");
+        page.Run("fire('mouseover', itemIcon(brew, 70001)); fire('mouseover', brew.querySelector('.grid'))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
+
+        page.Run("fire('mouseover', itemIcon(brew, 70001)); fire('mouseout', itemIcon(brew, 70001), { relatedTarget: null })");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_workbench_item_the_game_never_named_is_not_a_hover()
+    {
+        var page = Ready();
+
+        page.Run("var brew = workbenchPage('file:///game/WebUI/UI/BrewPanel/BrewPanel.html', [70001])");
+        page.Poll();
+        page.Run("unitySays('BrewPanel', 'Refresh', [{ itemId: 70009, configId: 1201 }])");
+        page.Run("fire('mouseover', itemIcon(brew, 70001))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
     }
 
     [Fact]

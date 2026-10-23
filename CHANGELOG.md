@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4
+
+- `/` over an item in a workbench (brewer, freezer, cooker, compressor and the rest) opens that item instead of the home page.
+- A minimized window can be dragged right down to the bottom of the screen, and comes back fully on screen when restored.
+- The window's title bar is much smaller.
+
 ## 0.1.3
 
 - The window has minimize, maximize and close buttons at the top right, like a desktop window. Minimize shrinks it to its title bar; `/` or the book button brings it back. Maximize fills the screen without changing the size you saved.
