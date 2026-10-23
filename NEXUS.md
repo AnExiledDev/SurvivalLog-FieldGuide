@@ -33,6 +33,7 @@ Works in English and Chinese.
 [list]
 [*]Survival Log 1.1.19131. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]. Install it first.[/*]
+[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps.[/*]
 [/list]
 
 [size=5]Installation[/size]
@@ -90,6 +91,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 [list]
 [*]Survival Log 1.1.19131。游戏更新后，在模组更新前可能无法使用。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]，请先安装。[/*]
+[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 或更新版本。安装后手机应用会和游戏自带的应用一起放在手机底部的程序栏里。[/*]
 [/list]
 
 [size=5]安装[/size]

@@ -827,7 +827,8 @@
   function patchPhone(doc) {
     var grid = doc.querySelector('.app-grid');
 
-    if (!grid || grid.querySelector('.' + PHONE_APP_CLASS)) return;
+    // Exiled's Toolkit moves the app into the phone's dock, so look for it anywhere on the page, not only in the grid.
+    if (!grid || doc.querySelector('.' + PHONE_APP_CLASS)) return;
 
     addPhoneStyle(doc);
     grid.appendChild(phoneApp(doc));
@@ -849,6 +850,9 @@
   // The markup of the phone's own apps: an icon square with a stroked glyph, and the label under it.
   function phoneApp(doc) {
     var app = make(doc, 'div', 'app is-fg ' + PHONE_APP_CLASS);
+
+    // Exiled's Toolkit puts marked apps in the phone's dock, lowest number first; without it this does nothing.
+    app.setAttribute('data-etk-phone', '10');
     var icon = make(doc, 'div', 'app-icon');
     var glyph = make(doc, 'div', 'icon-glyph');
     var svg = doc.createElementNS(SVG_NS, 'svg');

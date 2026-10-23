@@ -7,10 +7,11 @@ using HarmonyLib;
 namespace FieldGuide;
 
 [BepInPlugin(Guid, "Field Guide", Version)]
+[BepInDependency("com.dev.survivallog.exiledtoolkit", BepInDependency.DependencyFlags.SoftDependency)]
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.fieldguide";
-    private const string Version = "0.1.7";
+    private const string Version = "0.1.8";
 
     public override void Load()
     {
