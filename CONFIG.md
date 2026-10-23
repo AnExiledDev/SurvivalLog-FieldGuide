@@ -6,7 +6,7 @@ Settings live in `BepInEx\config\com.dev.survivallog.fieldguide.cfg`, created th
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `Hotkey` | `Slash` (`/`) | Opens the page for what the pointer is over (a backpack item, a trader's shelf item, a map location), or opens and closes the window over anything else. Ignored while the pointer is over the window. `None` leaves only the HUD button. |
+| `Hotkey` | `Slash` (`/`) | Opens the page for what the pointer is over (a backpack item, a trader's shelf item, a workbench item, a map location), or opens and closes the window over anything else. Ignored while the pointer is over the window. `None` leaves only the HUD button. |
 
 ## Site
 

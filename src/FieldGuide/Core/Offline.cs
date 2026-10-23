@@ -48,7 +48,8 @@ public abstract record OfflineState
     /// <summary>No copy on disk. Bytes is the download size once the site has said it, 0 before.</summary>
     public sealed record Missing(long Bytes) : OfflineState;
 
-    public sealed record Downloading(int Percent) : OfflineState;
+    /// <summary>KeptCopy: an older copy is on disk and stays in use until the new one is in place.</summary>
+    public sealed record Downloading(int Percent, bool KeptCopy) : OfflineState;
 
     /// <summary>A copy is on disk. NewerBytes is the size of a newer one on the site, 0 when there is none.</summary>
     public sealed record Ready(string Version, long NewerBytes) : OfflineState;
@@ -56,7 +57,7 @@ public abstract record OfflineState
     /// <summary>The last download failed; the copy before it, if any, is still in place.</summary>
     public sealed record Failed(string Reason, bool KeptCopy) : OfflineState;
 
-    public bool HasCopy => this is Ready || this is Failed { KeptCopy: true };
+    public bool HasCopy => this is Ready || this is Failed { KeptCopy: true } || this is Downloading { KeptCopy: true };
 
     /// <summary>After the site's version.json is read: a copy older than the site's build offers an update.</summary>
     public OfflineState WithSiteBundle(BundleInfo site) => this switch

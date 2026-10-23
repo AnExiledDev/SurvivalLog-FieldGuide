@@ -4,7 +4,7 @@ A BepInEx mod for Survival Log. Read the [Survival Log Database](https://sldb.co
 
 ## What it does
 
-- **Look things up with `/`:** hover an item in your backpack or on a trader's shelf, or a location on the map, and press `/` to open its page. Over nothing, `/` opens or closes the window.
+- **Look things up with `/`:** hover an item in your backpack, on a trader's shelf or in a workbench (brewer, cooker, freezer and the rest), or a location on the map, and press `/` to open its page. Over nothing, `/` opens or closes the window.
 - **A window you place yourself:** drag it by its title bar and resize it from any edge or corner. It opens where you left it, at the size you left it. `A-` and `A+` on the title bar make the text smaller or larger. The buttons at the top right minimize it to its title bar, maximize it to fill the screen, or close it.
 - **Book button on the HUD:** a book button in the bottom-left tool column opens and closes the window.
 - **Phone app:** the phone's home screen gets a Field Guide app that shows the site's phone layout. Its top bar minimizes it (it opens again on the same page), moves the page to the large window, or closes it; `Back` closes it too.
@@ -34,7 +34,7 @@ See [CONFIG.md](CONFIG.md).
 
 ## Troubleshooting
 
-The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.1.6 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
+The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.1.7 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
 
 ## Feedback
 

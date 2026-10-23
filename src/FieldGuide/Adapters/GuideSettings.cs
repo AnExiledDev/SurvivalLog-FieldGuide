@@ -15,8 +15,8 @@ internal sealed class GuideSettings
     public GuideSettings(ConfigFile config)
     {
         _hotkey = config.Bind("Controls", "Hotkey", KeyCode.Slash,
-            "Opens the Field Guide on whatever the pointer is over (an item in the backpack, on a trade shelf, or a place on the map), or opens and closes the window when it is over nothing. Ignored while the pointer is over the window. Set to None to use only the HUD button.\n" +
-            "打开指针所指之物的野外指南页面（背包或交易货架上的物品、地图上的地点）；未指向任何物品时打开或关闭窗口。指针在窗口上时不生效。设为 None 则只用 HUD 按钮。");
+            "Opens the Field Guide on whatever the pointer is over (an item in the backpack, on a trade shelf or in a workbench, or a place on the map), or opens and closes the window when it is over nothing. Ignored while the pointer is over the window. Set to None to use only the HUD button.\n" +
+            "打开指针所指之物的野外指南页面（背包、交易货架或工作台里的物品，地图上的地点）；未指向任何物品时打开或关闭窗口。指针在窗口上时不生效。设为 None 则只用 HUD 按钮。");
         _source = config.Bind("Site", "Source", SiteSource.Auto,
             "Where pages come from. Auto uses the offline copy once it is downloaded and the website before that. Online always uses the website. Offline only uses the downloaded copy.\n" +
             "页面来源。Auto 在下载离线版后使用离线版，之前使用网站。Online 始终使用网站。Offline 只使用已下载的离线版。");

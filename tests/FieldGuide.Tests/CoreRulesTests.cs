@@ -196,7 +196,14 @@ public class OfflineTests
         Assert.Equal(new OfflineState.Ready("v1", 150_000_000), new OfflineState.Ready("v1", 0).WithSiteBundle(site));
         Assert.Equal(new OfflineState.Ready("v2", 0), new OfflineState.Ready("v2", 0).WithSiteBundle(site));
         Assert.Equal(new OfflineState.Missing(150_000_000), new OfflineState.Missing(0).WithSiteBundle(site));
-        Assert.Equal(new OfflineState.Downloading(40), new OfflineState.Downloading(40).WithSiteBundle(site));
+        Assert.Equal(new OfflineState.Downloading(40, false), new OfflineState.Downloading(40, false).WithSiteBundle(site));
+    }
+
+    [Fact]
+    public void An_update_download_keeps_the_old_copy_in_use_and_a_first_download_has_none_yet()
+    {
+        Assert.True(new OfflineState.Downloading(50, KeptCopy: true).HasCopy);
+        Assert.False(new OfflineState.Downloading(50, KeptCopy: false).HasCopy);
     }
 
     [Fact]
@@ -204,7 +211,6 @@ public class OfflineTests
     {
         Assert.True(new OfflineState.Failed("hash mismatch", KeptCopy: true).HasCopy);
         Assert.False(new OfflineState.Failed("no network", KeptCopy: false).HasCopy);
-        Assert.False(new OfflineState.Downloading(50).HasCopy);
     }
 
     [Fact]
@@ -238,7 +244,7 @@ public class GuideViewTests
     [Fact]
     public void A_download_in_progress_cannot_be_started_again()
     {
-        Assert.Equal(new OfflineButton("Downloading 40%", false), GuideView.Button(new OfflineState.Downloading(40), false));
+        Assert.Equal(new OfflineButton("Downloading 40%", false), GuideView.Button(new OfflineState.Downloading(40, false), false));
     }
 
     [Fact]
@@ -263,7 +269,7 @@ public class GuideViewTests
     [Fact]
     public void The_button_follows_the_game_language()
     {
-        Assert.Equal("下载中 40%", GuideView.Button(new OfflineState.Downloading(40), true).Label);
+        Assert.Equal("下载中 40%", GuideView.Button(new OfflineState.Downloading(40, false), true).Label);
     }
 
     [Fact]

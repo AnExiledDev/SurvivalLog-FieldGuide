@@ -73,7 +73,7 @@ internal sealed class OfflineCopy
 
         var hadCopy = State.HasCopy;
 
-        Set(new OfflineState.Downloading(0));
+        Set(new OfflineState.Downloading(0, hadCopy));
         Task.Run(async () =>
         {
             try
@@ -172,7 +172,7 @@ internal sealed class OfflineCopy
             if (percent == shownPercent) continue;
 
             shownPercent = percent;
-            Set(new OfflineState.Downloading(percent));
+            Set(new OfflineState.Downloading(percent, State.HasCopy));
         }
     }
 

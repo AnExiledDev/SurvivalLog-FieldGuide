@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.7
+
+- Updating the offline copy keeps the old copy in use until the new one is in, instead of showing "no offline copy" during the download.
+- The game's hotkeys no longer stay paused if the game's screens reload, or the phone is put away, while the Field Guide phone app is open.
+
 ## 0.1.6
 
 - The minimized title bar no longer shows the offline download button.

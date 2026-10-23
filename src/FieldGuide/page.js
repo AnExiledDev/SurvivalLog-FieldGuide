@@ -697,7 +697,7 @@
         doc = frames[i].contentDocument;
       } catch (e) {}
 
-      if (doc) docs.push({ src: src, doc: doc });
+      if (doc) docs.push({ src: src, doc: doc, frame: frames[i] });
       else if (/\.html/.test(src) && src.indexOf('file:') === 0 && !hasReportedPageAccess) {
         hasReportedPageAccess = true;
         send('diag|cannot reach a game page document (root ' + location.protocol + ', iframe ' + src + ')');
@@ -728,7 +728,7 @@
         if (entry.pattern.test(page.src)) entry.patch(page.doc);
       });
 
-      if (/PhoneSMS\.html/.test(page.src) && page.doc.querySelector('.' + PHONE_VIEW_CLASS)) isPhoneShown = true;
+      if (/PhoneSMS\.html/.test(page.src) && page.frame.style.display !== 'none' && page.doc.querySelector('.' + PHONE_VIEW_CLASS)) isPhoneShown = true;
     });
 
     if (phone.screen && !isPhoneShown) phoneClosed();

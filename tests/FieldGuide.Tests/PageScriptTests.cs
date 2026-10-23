@@ -396,7 +396,7 @@ public class PageScriptTests
     [Fact]
     public void A_download_in_progress_cannot_be_started_twice()
     {
-        var page = Ready(null, new OfflineState.Downloading(30));
+        var page = Ready(null, new OfflineState.Downloading(30, false));
 
         page.Toggle();
         page.Click("guideWindow().querySelector('.fg-bar').querySelector('.fg-get')");
@@ -663,6 +663,20 @@ public class PageScriptTests
         page.Click("phonePage().querySelector('.fg-app')");
         page.Run("dropPage(/PhoneSMS/)");
         page.Forget();
+        page.Poll();
+
+        Assert.Contains(new PageCommand.Phone(false), page.Sent);
+    }
+
+    [Fact]
+    public void A_phone_the_game_hides_with_the_app_open_gives_the_keyboard_back()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Poll();
+        page.Forget();
+        page.Run("document.querySelectorAll('iframe').filter(function (node) { return /PhoneSMS/.test(node.src); })[0].style.display = 'none'");
         page.Poll();
 
         Assert.Contains(new PageCommand.Phone(false), page.Sent);

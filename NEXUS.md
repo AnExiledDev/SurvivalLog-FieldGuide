@@ -6,7 +6,7 @@ Stop alt-tabbing to look things up. Field Guide puts the [url=https://sldb.core-
 
 [size=5]Main features[/size]
 [list]
-[*][b]Look it up with /[/b]: hover an item in your backpack or on a trader's shelf, or a location on the map, and press [b]/[/b] to open its page.[/*]
+[*][b]Look it up with /[/b]: hover an item in your backpack, on a trader's shelf or in a workbench (brewer, cooker, freezer and the rest), or a location on the map, and press [b]/[/b] to open its page.[/*]
 [*][b]Put it where you want it[/b]: drag the window by its title bar and resize it from any edge or corner. It opens where you left it, at the size you left it.[/*]
 [*][b]Text size[/b]: A- and A+ on the title bar make the text smaller or larger. The window keeps it.[/*]
 [*][b]Window buttons[/b]: minimize the window to its title bar, maximize it to fill the screen, or close it, from the top right.[/*]
@@ -25,7 +25,7 @@ Works in English and Chinese.
 
 [size=5]Known issues[/size]
 [list]
-[*]Lookups work in the backpack, the trade screen and the two maps. Other screens are coming.[/*]
+[*]Lookups work in the backpack, the trade screen, workbenches and the two maps. Other screens are coming.[/*]
 [*]Without the offline copy, reading the site needs an internet connection.[/*]
 [/list]
 
@@ -63,7 +63,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 
 [size=5]主要功能[/size]
 [list]
-[*][b]按 / 查询[/b]：把指针悬停在背包或交易货架上的物品、或地图上的地点上，按 [b]/[/b] 即可打开对应页面。[/*]
+[*][b]按 / 查询[/b]：把指针悬停在背包、交易货架或工作台（酿造台、灶台、冷柜等）里的物品，或地图上的地点上，按 [b]/[/b] 即可打开对应页面。[/*]
 [*][b]想放哪就放哪[/b]：拖动标题栏移动窗口，拖动任意边缘或角落调整大小。下次打开时保持上次的位置和大小。[/*]
 [*][b]文字大小[/b]：标题栏的 A- 和 A+ 可缩小或放大文字，并会保存。[/*]
 [*][b]窗口按钮[/b]：右上角的按钮可把窗口最小化到标题栏、最大化铺满屏幕或关闭。[/*]
@@ -82,7 +82,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 
 [size=5]已知问题[/size]
 [list]
-[*]目前可在背包、交易界面和两张地图中查询，其他界面以后加入。[/*]
+[*]目前可在背包、交易界面、工作台和两张地图中查询，其他界面以后加入。[/*]
 [*]未下载离线版时，浏览网站需要联网。[/*]
 [/list]
 
@@ -104,7 +104,11 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 删除 [font=Courier New]BepInEx\plugins[/font] 中的 [font=Courier New]FieldGuide.dll[/font]。离线版位于 [font=Courier New]BepInEx\FieldGuide[/font]，一并删除即可释放空间。
 
 [size=5]配置[/size]
-在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font]，或在游戏内的 Mod Manager 模组界面中修改快捷键、页面来源（在线、离线或自动）和保存的窗口位置。配置文件中每项设置都有中英文说明。修改在下次启动游戏时生效。
+在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font]，或在游戏内 Mod Manager 的「模组」界面中修改快捷键、页面来源（在线、离线或自动）和保存的窗口位置。配置文件中每项设置都有中英文说明。修改在下次启动游戏时生效。
 
 [size=5]反馈[/size]
 发现问题或有想法？欢迎来 [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url]，或在本页的 Posts 标签页留言。报告问题时请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\field-guide.log[/font]。
+想直接联系我，可以在 Discord 上给 [b]exiled.dev[/b] 发消息，我在 [url=https://discord.gg/MZGg4gQAUe]Survival Log 官方 Discord[/url] 里。也可以在 X 上找我：[url=https://x.com/AnExiledDev]@AnExiledDev[/url]。
+
+[size=5]源代码与许可[/size]
+基于 MIT 许可开源：[url=https://github.com/AnExiledDev/SurvivalLog-FieldGuide]github.com/AnExiledDev/SurvivalLog-FieldGuide[/url]

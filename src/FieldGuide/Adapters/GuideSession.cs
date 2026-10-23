@@ -59,9 +59,11 @@ internal sealed class GuideSession
         {
             case PageCommand.Ready:
                 _sentView = null;
+                _isPhoneOpen = false;
                 _log("page script ready");
                 break;
             case PageCommand.NoScript:
+                _isPhoneOpen = false;
                 _page.Install();
                 break;
             case PageCommand.Toggle:
