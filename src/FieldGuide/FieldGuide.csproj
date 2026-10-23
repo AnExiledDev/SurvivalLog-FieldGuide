@@ -40,7 +40,7 @@
     <AssemblyMetadata Include="ModManager.Description" Value="The Survival Log Database inside the game. A HUD button opens a window you can drag anywhere and resize from any edge. Hover an item or a map location and press / to open its page. The phone gets a Field Guide app. The whole site can be downloaded once and read offline.&#10;在游戏内查看生存日志数据库。HUD 按钮打开一个可随意拖动、可从任意边缘调整大小的窗口。悬停在物品或地图地点上按 / 即可打开对应页面。手机上会多出「野外指南」应用。整个网站可一次下载，离线浏览。" />
     <AssemblyMetadata Include="ModManager.Author" Value="AnExiledDev" />
     <AssemblyMetadata Include="ModManager.Category" Value="QualityOfLife" />
-    <AssemblyMetadata Include="ModManager.GameVersion" Value="1.1.19131" />
+    <AssemblyMetadata Include="ModManager.GameVersion" Value="1.1.19611" />
     <AssemblyMetadata Include="ModManager.Settings" Value="Restart" />
     <AssemblyMetadata Include="ModManager.GitHub" Value="AnExiledDev/SurvivalLog-FieldGuide" />
     <AssemblyMetadata Include="ModManager.Changelog" Value="https://github.com/AnExiledDev/SurvivalLog-FieldGuide/blob/main/CHANGELOG.md" />

@@ -15,7 +15,7 @@ While the pointer is over the window or the phone app is open, typing goes to th
 
 ## Requirements
 
-- Survival Log 1.1.19131. A game update can break it until the mod is updated.
+- Survival Log 1.1.19611. A game update can break it until the mod is updated.
 - [BepInEx for Survival Log](https://www.nexusmods.com/survivallog/mods/12). Install it first.
 - An internet connection to read the site online or to download the offline copy.
 - Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps; without it, it shows in the middle of the phone's home screen.
