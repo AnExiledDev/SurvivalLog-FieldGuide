@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- A minimized window shrinks to just its title and buttons, kept at the window's right edge so the restore button stays where minimize was. Restoring brings back the full size.
+
 ## 0.1.4
 
 - `/` over an item in a workbench (brewer, freezer, cooker, compressor and the rest) opens that item instead of the home page.

@@ -164,7 +164,7 @@
     '.fg-x{border:none;font-size:14px;line-height:14px;padding:0 5px}',
     '.fg-win-btn{border:none;padding:2px 4px;line-height:0}',
     '.fg-icon{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:1.2}',
-    '#fg-win.is-min .fg-body,#fg-win.is-min .fg-grip,#fg-win.is-max .fg-grip{display:none}',
+    '#fg-win.is-min .fg-body,#fg-win.is-min .fg-grip,#fg-win.is-min .fg-gap,#fg-win.is-max .fg-grip{display:none}',
     '#fg-win.is-max{border-radius:0}',
     '#fg-win.is-max .fg-bar{cursor:default}',
     '.fg-body{flex:1;position:relative;background:#16130f}',
@@ -274,6 +274,9 @@
     });
     ui.body.className = view.base ? 'fg-body' : 'fg-body is-empty';
     scaleFrame();
+
+    // A minimized bar is as wide as its buttons, and their text can change while it is down.
+    if (isMinimized) report();
   }
 
   function renderWindowButtons() {
@@ -308,23 +311,44 @@
     send('textsize|' + textSize);
   }
 
+  // A minimized window shrinks to its title bar's buttons and keeps its right edge, so restore stays under the pointer.
   function place() {
     var style = ui.root.style;
     var shown = isMaximized ? { x: 0, y: 0, w: 1, h: 1 } : rect;
 
-    style.left = shown.x * 100 + 'vw';
     style.top = shown.y * 100 + 'vh';
+
+    if (isMinimized) {
+      style.left = 'auto';
+      style.right = (1 - shown.x - shown.w) * 100 + 'vw';
+      style.width = 'auto';
+      style.height = BAR_PX + 'px';
+      return;
+    }
+
+    style.right = 'auto';
+    style.left = shown.x * 100 + 'vw';
     style.width = shown.w * 100 + 'vw';
-    style.height = isMinimized ? BAR_PX + 'px' : shown.h * 100 + 'vh';
+    style.height = shown.h * 100 + 'vh';
   }
 
-  // A window minimized near the bottom edge is lifted on restore until all of it shows, and that place is saved.
+  // The bar's own width once it has shrunk; before the page has laid it out, the window's width.
+  function barWidth(shown) {
+    var px = ui ? ui.root.offsetWidth : 0;
+
+    return px > 0 ? Math.min(px / window.innerWidth, shown.w) : shown.w;
+  }
+
+  // A window minimized near an edge is moved on restore until all of it shows, and that place is saved.
   function fitOnScreen() {
-    var top = rect ? Math.min(rect.y, 1 - rect.h) : 0;
+    if (!rect) return;
 
-    if (!rect || top === rect.y) return;
+    var left = clamp(rect.x, 0, 1 - rect.w);
+    var top = Math.min(rect.y, 1 - rect.h);
 
-    rect = { x: rect.x, y: top, w: rect.w, h: rect.h };
+    if (left === rect.x && top === rect.y) return;
+
+    rect = { x: left, y: top, w: rect.w, h: rect.h };
     send('moved|' + rectText(rect));
   }
 
@@ -334,7 +358,9 @@
 
     if (!isMinimized) return shown;
 
-    return { x: shown.x, y: shown.y, w: shown.w, h: Math.min(BAR_PX / window.innerHeight, shown.h) };
+    var w = barWidth(shown);
+
+    return { x: shown.x + shown.w - w, y: shown.y, w: w, h: Math.min(BAR_PX / window.innerHeight, shown.h) };
   }
 
   // Maximize and minimize change only how the window is shown, never the place the player saved.
@@ -449,7 +475,12 @@
 
   // Moves keep the size; resizes move only the edges named, never below the minimum size or off the screen.
   function dragRect(from, kind, dx, dy) {
-    if (kind === 'move') return { x: clamp(from.x + dx, 0, 1 - from.w), y: clamp(from.y + dy, 0, 1 - screenRect().h), w: from.w, h: from.h };
+    // Only what shows has to stay on screen: a minimized bar sits at the window's right edge.
+    if (kind === 'move') {
+      var shown = screenRect();
+
+      return { x: clamp(from.x + dx, isMinimized ? shown.w - from.w : 0, 1 - from.w), y: clamp(from.y + dy, 0, 1 - shown.h), w: from.w, h: from.h };
+    }
 
     var left = from.x;
     var top = from.y;

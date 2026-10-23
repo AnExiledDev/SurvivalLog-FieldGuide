@@ -302,6 +302,45 @@ public class PageScriptTests
     }
 
     [Fact]
+    public void A_minimized_window_shrinks_to_its_buttons_at_its_right_edge_and_restore_brings_back_its_size()
+    {
+        var page = Opened();
+
+        // The page lays the shrunk bar out 250 px wide on a 1000 px screen.
+        page.Run("guideWindow().offsetWidth = 250");
+        page.Click("windowButton('minimize')");
+
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.71, 0.08, 0.25, 0.044)), page.Sent[^1]);
+        Assert.Equal("auto", page.Text("guideWindow().style.width"));
+        Assert.Equal("auto", page.Text("guideWindow().style.left"));
+
+        page.Click("windowButton('minimize')");
+
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.8)), page.Sent[^1]);
+        Assert.Equal("auto", page.Text("guideWindow().style.right"));
+        Assert.NotEqual("auto", page.Text("guideWindow().style.width"));
+    }
+
+    [Fact]
+    public void A_minimized_bar_drags_to_the_left_edge_and_the_window_comes_back_wholly_on_screen()
+    {
+        var page = Opened();
+
+        page.Run("guideWindow().offsetWidth = 250");
+        page.Click("windowButton('minimize')");
+        page.Run("dragFrom(guideWindow().querySelector('.fg-bar'), 800, 100, 0, 100)");
+
+        // The bar's left edge stops at the screen's, though the window's saved left edge would be past it.
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0, 0.08, 0.25, 0.044)), page.Sent.OfType<PageCommand.Shown>().Last());
+
+        page.Forget();
+        page.Click("windowButton('minimize')");
+
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0, 0.08, 0.36, 0.8)), page.Sent.OfType<PageCommand.Shown>().Last());
+        Assert.Contains(page.Sent, command => command is PageCommand.Moved moved && moved.Layout.Format() == "0,0.08,0.36,0.8");
+    }
+
+    [Fact]
     public void A_window_closed_while_minimized_at_the_bottom_reopens_wholly_on_screen()
     {
         var page = Opened();
