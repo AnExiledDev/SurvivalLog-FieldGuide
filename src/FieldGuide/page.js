@@ -28,10 +28,22 @@
   var BOOK_FILL = 'M2 4h7c1.2 0 2.3.5 3 1.3.7-.8 1.8-1.3 3-1.3h7v15h-7c-1.1 0-2 .9-2 2h-2c0-1.1-.9-2-2-2H2V4zm2 2v11h5c.7 0 1.4.2 2 .5V7.5c0-.8-.7-1.5-1.5-1.5H4zm9 1.5v10c.6-.3 1.3-.5 2-.5h5V6h-5.5c-.8 0-1.5.7-1.5 1.5z';
   // The same book as two strokes, for the phone's app icons, which are drawn in outline.
   var BOOK_STROKES = ['M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z', 'M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z'];
+  // The window buttons, drawn on a 10-unit grid the way a desktop window draws them.
+  var ICONS = {
+    minimize: 'M1.5 8.5h7',
+    maximize: 'M1.5 1.5h7v7h-7z',
+    restore: 'M3.5 1.5h5v5M1.5 3.5h5v5h-5z',
+    expand: 'M6 1.5h2.5V4M8.5 1.5L5.5 4.5M4 8.5H1.5V6M1.5 8.5l3-3'
+  };
+  // The title bar's height with the window's border, which is all a minimized window keeps.
+  var BAR_PX = 32;
+  // The site names the page it is on in a message to the game's root page (src/designs/depot/Frame.astro).
+  var SITE_AT = 'slfg-at|';
   // The plugin hands over the words in the game's language before every call (Texts.cs); English stands in until then.
   var ENGLISH = {
     title: 'Field Guide', tip: 'The Survival Log Database. Hover an item or a map location and press {0} to look it up',
     home: 'Home', close: 'Close', back: 'Back', smaller: 'Smaller text', bigger: 'Larger text',
+    minimize: 'Minimize', maximize: 'Maximize', restore: 'Restore', expand: 'Open in the large window',
     needCopy: 'Source is set to Offline and there is no offline copy yet. Download it here, or set Source to Auto to read the site online.'
   };
 
@@ -42,6 +54,8 @@
   var ui = null;
   var drag = null;
   var isOpen = false;
+  var isMaximized = false;
+  var isMinimized = false;
   var path = null;
   var phone = { isOpen: false, path: null };
   var hasReportedPageAccess = false;
@@ -97,6 +111,44 @@
     return '/' + view.lang + '/';
   }
 
+  // A stroked icon in the current color, for a window button.
+  function drawIcon(button, name) {
+    var doc = button.ownerDocument;
+    var svg = doc.createElementNS(SVG_NS, 'svg');
+    var line = doc.createElementNS(SVG_NS, 'path');
+
+    svg.setAttribute('viewBox', '0 0 10 10');
+    svg.setAttribute('class', 'fg-icon');
+    line.setAttribute('d', ICONS[name]);
+    svg.appendChild(line);
+    button.textContent = '';
+    button.appendChild(svg);
+    button.setAttribute('data-icon', name);
+  }
+
+  // The site's address for the page it says it is on, without the analytics tags the guide added.
+  function pageFromSite(at) {
+    var parts = at.split('?');
+    var kept = (parts[1] || '').split('&').filter(function (pair) { return pair && pair.indexOf('utm_') !== 0; });
+
+    return parts[0] + (kept.length ? '?' + kept.join('&') : '');
+  }
+
+  // "slfg-at|<frame name>|<path>" from a site page, so the guide knows where the reader is when it reloads or moves
+  // the page. Only plain site paths are taken.
+  function onSiteMessage(e) {
+    var data = e && typeof e.data === 'string' ? e.data : '';
+
+    if (data.indexOf(SITE_AT) !== 0) return;
+
+    var parts = data.substring(SITE_AT.length).split('|');
+    var at = parts[1] || '';
+
+    if (at.charAt(0) !== '/' || at.charAt(1) === '/') return;
+    if (parts[0] === FRAME_NAME && isOpen) path = pageFromSite(at);
+    else if (parts[0] === PHONE_FRAME_NAME && phone.screen) phone.at = pageFromSite(at);
+  }
+
   // ===== The window =====
 
   var CSS = [
@@ -110,6 +162,11 @@
     '.fg-btn:hover{background:rgba(251,176,52,.15)}',
     '.fg-btn:disabled{opacity:.6;cursor:default}',
     '.fg-x{border:none;font-size:18px;line-height:18px;padding:2px 8px}',
+    '.fg-win-btn{border:none;padding:4px 6px;line-height:0}',
+    '.fg-icon{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.2}',
+    '#fg-win.is-min .fg-body,#fg-win.is-min .fg-grip,#fg-win.is-max .fg-grip{display:none}',
+    '#fg-win.is-max{border-radius:0}',
+    '#fg-win.is-max .fg-bar{cursor:default}',
     '.fg-body{flex:1;position:relative;background:#16130f}',
     '.fg-frame{position:absolute;left:0;top:0;width:100%;height:100%;border:0;background:#16130f;transform-origin:0 0}',
     '.fg-empty{position:absolute;left:0;top:0;right:0;bottom:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;color:#c8c8c8;font-size:14px;text-align:center}',
@@ -148,6 +205,8 @@
     bar.appendChild(actButton('smaller', 'fg-btn fg-smaller', 'A-'));
     bar.appendChild(actButton('bigger', 'fg-btn fg-bigger', 'A+'));
     bar.appendChild(actButton('home', 'fg-btn fg-home'));
+    bar.appendChild(actButton('minimize', 'fg-btn fg-win-btn fg-min'));
+    bar.appendChild(actButton('maximize', 'fg-btn fg-win-btn fg-max'));
     bar.appendChild(actButton('close', 'fg-btn fg-x', '\u00d7'));
     empty.appendChild(make(document, 'div', 'fg-empty-text'));
     empty.appendChild(actButton('download', 'fg-btn fg-get'));
@@ -202,6 +261,7 @@
     ui.root.querySelector('.fg-title').textContent = say('title');
     ui.root.querySelector('.fg-home').textContent = say('home');
     ui.root.querySelector('.fg-x').title = say('close');
+    renderWindowButtons();
     ui.root.querySelector('.fg-smaller').title = say('smaller');
     ui.root.querySelector('.fg-bigger').title = say('bigger');
     ui.root.querySelector('.fg-empty-text').textContent = say('needCopy');
@@ -214,6 +274,18 @@
     });
     ui.body.className = view.base ? 'fg-body' : 'fg-body is-empty';
     scaleFrame();
+  }
+
+  function renderWindowButtons() {
+    var min = ui.root.querySelector('.fg-min');
+    var max = ui.root.querySelector('.fg-max');
+
+    drawIcon(min, isMinimized ? 'restore' : 'minimize');
+    drawIcon(max, isMaximized ? 'restore' : 'maximize');
+    min.title = say(isMinimized ? 'restore' : 'minimize');
+    max.title = say(isMaximized ? 'restore' : 'maximize');
+    ui.root.classList[isMinimized ? 'add' : 'remove']('is-min');
+    ui.root.classList[isMaximized ? 'add' : 'remove']('is-max');
   }
 
   // The frame is laid out larger and shrunk back to the window, so the site reflows to the size it is read at.
@@ -238,11 +310,30 @@
 
   function place() {
     var style = ui.root.style;
+    var shown = isMaximized ? { x: 0, y: 0, w: 1, h: 1 } : rect;
 
-    style.left = rect.x * 100 + 'vw';
-    style.top = rect.y * 100 + 'vh';
-    style.width = rect.w * 100 + 'vw';
-    style.height = rect.h * 100 + 'vh';
+    style.left = shown.x * 100 + 'vw';
+    style.top = shown.y * 100 + 'vh';
+    style.width = shown.w * 100 + 'vw';
+    style.height = isMinimized ? BAR_PX + 'px' : shown.h * 100 + 'vh';
+  }
+
+  // Where the window is on screen: the whole screen when maximized, its title bar alone when minimized.
+  function screenRect() {
+    var shown = isMaximized ? { x: 0, y: 0, w: 1, h: 1 } : rect;
+
+    if (!isMinimized) return shown;
+
+    return { x: shown.x, y: shown.y, w: shown.w, h: Math.min(BAR_PX / window.innerHeight, shown.h) };
+  }
+
+  // Maximize and minimize change only how the window is shown, never the place the player saved.
+  function setShape(maximized, minimized) {
+    isMaximized = maximized;
+    isMinimized = minimized;
+    renderWindowButtons();
+    place();
+    report();
   }
 
   function navigate(to) {
@@ -260,25 +351,29 @@
 
     ui.root.classList.add('is-open');
     isOpen = true;
-    report();
+    setShape(isMaximized, false);
   }
 
+  // Closing keeps the page and whether the window was maximized, so the next open picks up where the player was.
   function close() {
     if (ui) ui.root.classList.remove('is-open');
 
     endDrag();
     isOpen = false;
+    isMinimized = false;
     send('hidden');
   }
 
+  // The hotkey and the HUD button bring a minimized window back rather than closing it.
   function toggle() {
-    if (isOpen) close();
+    if (isOpen && isMinimized) setShape(isMaximized, false);
+    else if (isOpen) close();
     else open(null);
   }
 
   // The plugin keeps clicks over the window for the page only while it hears where the window is.
   function report() {
-    if (isOpen && !drag) send('shown|' + rectText(rect));
+    if (isOpen && !drag) send('shown|' + rectText(screenRect()));
   }
 
   function onClick(e) {
@@ -293,6 +388,8 @@
     var act = target.getAttribute('data-act');
 
     if (act === 'close') close();
+    else if (act === 'minimize') setShape(isMaximized, !isMinimized);
+    else if (act === 'maximize') setShape(!isMaximized, false);
     else if (act === 'home') navigate(homePath());
     else if (act === 'smaller') resizeText(-TEXT_STEP);
     else if (act === 'bigger') resizeText(TEXT_STEP);
@@ -309,7 +406,7 @@
     var grip = e.target.getAttribute('data-grip');
     var kind = grip || (e.target.closest('.fg-bar') ? 'move' : null);
 
-    if (!kind) return;
+    if (!kind || isMaximized) return;
 
     e.preventDefault();
     drag = { kind: kind, x: e.clientX, y: e.clientY, from: rect };
@@ -511,7 +608,7 @@
       if (/PhoneSMS\.html/.test(page.src) && page.doc.querySelector('.' + PHONE_VIEW_CLASS)) isPhoneShown = true;
     });
 
-    if (phone.isOpen && !isPhoneShown) phoneClosed();
+    if (phone.screen && !isPhoneShown) phoneClosed();
   }
 
   function patchPagesSafely() {
@@ -594,6 +691,10 @@
     '.fg-phone{position:absolute;left:0;top:0;right:0;bottom:0;z-index:50;display:flex;flex-direction:column;background:#16130f}',
     '.fg-phone-bar{flex:none;display:flex;align-items:center;gap:10px;height:40px;padding:0 10px;background:#2a2016;color:#fbb034;font-size:15px}',
     '.fg-phone-back{background:transparent;border:1px solid rgba(251,176,52,.45);border-radius:4px;color:#fbb034;padding:3px 10px;font-size:13px;cursor:pointer}',
+    '.fg-phone-title{flex:1}',
+    '.fg-phone-btn{background:transparent;border:none;color:#fbb034;padding:6px;line-height:0;cursor:pointer}',
+    '.fg-phone-x{font-size:20px;line-height:16px;padding:4px 6px}',
+    '.fg-icon{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.2}',
     '.fg-phone-frame{flex:1;width:100%;border:0;background:#16130f}',
     '.fg-phone-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;color:#c8c8c8;font-size:14px;text-align:center}',
     '.fg-phone-get{background:transparent;border:1px solid rgba(251,176,52,.45);border-radius:4px;color:#fbb034;padding:4px 10px;font-size:13px;cursor:pointer}',
@@ -650,29 +751,84 @@
     return app;
   }
 
+  // Tapping the app shows a minimized screen again as it was left; otherwise it starts at the site home.
   function openPhone(doc) {
     var panel = doc.querySelector('.sms-panel');
+    var existing = panel ? panel.querySelector('.' + PHONE_VIEW_CLASS) : null;
 
-    if (!panel || panel.querySelector('.' + PHONE_VIEW_CLASS)) return;
+    if (!panel) return;
 
-    var screen = make(doc, 'div', PHONE_VIEW_CLASS);
-    var bar = make(doc, 'div', 'fg-phone-bar');
-    var back = make(doc, 'button', 'fg-phone-back', say('back'));
+    if (existing) {
+      if (existing === phone.screen && !phone.isOpen) showPhone(true);
 
-    bar.appendChild(back);
-    bar.appendChild(make(doc, 'span', 'fg-phone-title', say('title')));
-    screen.appendChild(bar);
-    back.addEventListener('click', function (e) {
-      e.stopPropagation();
-      screen.remove();
-      phoneClosed();
-    });
-    screen.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+      return;
+    }
+
+    var screen = phoneScreen(doc);
+
     panel.appendChild(screen);
-
-    phone = { isOpen: true, path: homePath(), screen: screen };
+    phone = { isOpen: true, path: homePath(), at: null, screen: screen };
     fillPhone();
     send('phone|1');
+  }
+
+  function phoneScreen(doc) {
+    var screen = make(doc, 'div', PHONE_VIEW_CLASS);
+    var bar = make(doc, 'div', 'fg-phone-bar');
+
+    bar.appendChild(phoneButton(doc, 'fg-phone-back', say('back'), closePhone));
+    bar.appendChild(make(doc, 'span', 'fg-phone-title', say('title')));
+    bar.appendChild(phoneIconButton(doc, 'minimize', function () { showPhone(false); }));
+    bar.appendChild(phoneIconButton(doc, 'expand', expandPhone));
+    bar.appendChild(phoneButton(doc, 'fg-phone-btn fg-phone-x', '\u00d7', closePhone)).title = say('close');
+    screen.appendChild(bar);
+    screen.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+
+    return screen;
+  }
+
+  function phoneButton(doc, className, text, act) {
+    var button = make(doc, 'button', className, text);
+
+    button.addEventListener('click', function (e) {
+      e.stopPropagation();
+      act();
+    });
+
+    return button;
+  }
+
+  function phoneIconButton(doc, name, act) {
+    var button = phoneButton(doc, 'fg-phone-btn fg-phone-' + name, null, act);
+
+    drawIcon(button, name);
+    button.title = say(name);
+
+    return button;
+  }
+
+  // A minimized screen stays in the phone, page and all, behind the home screen, and gives the keyboard back.
+  function showPhone(isShown) {
+    phone.screen.style.display = isShown ? '' : 'none';
+    phone.isOpen = isShown;
+
+    if (isShown) fillPhone();
+
+    send('phone|' + (isShown ? 1 : 0));
+  }
+
+  function closePhone() {
+    if (phone.screen) phone.screen.remove();
+
+    phoneClosed();
+  }
+
+  // The page the phone is on moves to the large window, and the phone app closes.
+  function expandPhone() {
+    var to = phone.at || phone.path || homePath();
+
+    closePhone();
+    open(to);
   }
 
   function phoneClosed() {
@@ -726,6 +882,7 @@
   // ===== Start =====
 
   setInterval(patchPagesSafely, 400);
+  window.addEventListener('message', onSiteMessage);
   // The plugin forgets the window's place, and a drag, if it stops hearing about them.
   setInterval(function () {
     if (drag) send('dragging');

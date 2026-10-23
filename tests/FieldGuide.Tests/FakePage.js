@@ -10,6 +10,18 @@ var innerHeight = 500;
 
 var intervals = [];
 
+// Root.html's window: the site's pages post their messages to it.
+var windowListeners = {};
+
+window.addEventListener = function (type, listener) {
+  (windowListeners[type] = windowListeners[type] || []).push(listener);
+};
+
+// A site page in the named frame says which page it is on, as src/designs/depot/Frame.astro does.
+function siteSays(frameName, at) {
+  (windowListeners.message || []).forEach(function (listener) { listener({ data: 'slfg-at|' + frameName + '|' + at }); });
+}
+
 function setInterval(callback) {
   intervals.push(callback);
 

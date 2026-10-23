@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- The window has minimize, maximize and close buttons at the top right, like a desktop window. Minimize shrinks it to its title bar; `/` or the book button brings it back. Maximize fills the screen without changing the size you saved.
+- The phone app has minimize, open-in-the-large-window and close buttons. A minimized app opens again on the same page.
+- After the offline copy downloads, the window reloads the page you were reading rather than the last one it opened.
+
 ## 0.1.2
 
 - Pages opened from the live site are marked as Field Guide visits in the site's visitor statistics, so the site can see how much the guide is used in game. The offline copy sends nothing.

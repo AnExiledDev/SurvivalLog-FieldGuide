@@ -23,6 +23,10 @@ public static class Texts
         ["failed"] = ("Download failed, try again", "下载失败，点击重试"),
         ["needCopy"] = ("Source is set to Offline and there is no offline copy yet. Download it here, or set Source to Auto to read the site online.", "来源设为 Offline，但还没有离线版。可在此下载，或把 Source 设为 Auto 在线浏览。"),
         ["back"] = ("Back", "返回"),
+        ["minimize"] = ("Minimize", "最小化"),
+        ["maximize"] = ("Maximize", "最大化"),
+        ["restore"] = ("Restore", "还原"),
+        ["expand"] = ("Open in the large window", "在大窗口中打开"),
     };
 
     public static string Get(string key, bool isChinese) => Words.TryGetValue(key, out var pair) ? (isChinese ? pair.Zh : pair.En) : key;

@@ -238,6 +238,75 @@ public class PageScriptTests
         Assert.Equal("Offline copy", page.Text("guideWindow().querySelector('.fg-chip').textContent"));
     }
 
+    [Fact]
+    public void Maximize_fills_the_screen_and_restore_brings_back_the_saved_place()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('maximize')");
+
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0, 0, 1, 1)), page.Sent[^1]);
+        Assert.DoesNotContain(page.Sent, command => command is PageCommand.Moved);
+
+        page.Click("windowButton('maximize')");
+
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.8)), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void A_maximized_window_cannot_be_dragged()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('maximize')");
+        page.Forget();
+        page.Run("dragFrom(guideWindow().querySelector('.fg-title'), 500, 100, 400, 50)");
+
+        Assert.Empty(page.Sent);
+    }
+
+    [Fact]
+    public void Minimize_keeps_only_the_title_bar_and_the_hotkey_brings_the_window_back()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('minimize')");
+
+        // The 32 px title bar on a 500 px page.
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.064)), page.Sent[^1]);
+        Assert.True(page.Is("guideWindow().classList.contains('is-min')"));
+
+        page.Toggle();
+
+        Assert.True(page.Is("guideWindow().classList.contains('is-open')"));
+        Assert.False(page.Is("guideWindow().classList.contains('is-min')"));
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.8)), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void A_lookup_brings_a_minimized_window_back_on_the_new_page()
+    {
+        var page = Opened();
+
+        page.Click("windowButton('minimize')");
+        page.Run("vuePage('file:///game/WebUI/UI/BackpackUI/BackpackUI.html', { tooltipState: { visible: true, item: { cfgId: 1201 } } })");
+        page.Lookup();
+
+        Assert.False(page.Is("guideWindow().classList.contains('is-min')"));
+        Assert.Equal(InWindow("/en/go/?item=1201"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_finished_download_reloads_the_page_the_reader_moved_to()
+    {
+        var page = Opened();
+
+        page.Run("siteSays('field-guide', '/en/items/crackers/?utm_source=field-guide&utm_medium=window')");
+        page.Setup(ViewOf(Local));
+
+        Assert.Equal(Local + "/en/items/crackers/", page.Text("guideFrame().src"));
+    }
+
     // ===== Offline with no copy =====
 
     [Fact]
@@ -408,6 +477,64 @@ public class PageScriptTests
 
         Assert.False(page.Is("phonePage().querySelector('.fg-phone')"));
         Assert.Equal(new PageCommand.Phone(false), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void The_phone_close_button_closes_the_app_and_gives_the_keyboard_back()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Click("phonePage().querySelector('.fg-phone-x')");
+
+        Assert.False(page.Is("phonePage().querySelector('.fg-phone')"));
+        Assert.Equal(new PageCommand.Phone(false), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void A_minimized_phone_app_opens_again_on_the_same_page()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Run("phonePage().querySelector('.fg-phone-frame').marked = true");
+        page.Click("phonePage().querySelector('.fg-phone-minimize')");
+
+        Assert.Equal("none", page.Text("phonePage().querySelector('.fg-phone').style.display"));
+        Assert.Equal(new PageCommand.Phone(false), page.Sent[^1]);
+
+        page.Click("phonePage().querySelector('.fg-app')");
+
+        Assert.Equal("", page.Text("phonePage().querySelector('.fg-phone').style.display"));
+        Assert.True(page.Is("phonePage().querySelector('.fg-phone-frame').marked"));
+        Assert.Equal(new PageCommand.Phone(true), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void Expand_moves_the_phone_page_to_the_large_window()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Run("siteSays('field-guide-phone', '/en/map/pre-market/?utm_source=field-guide&utm_medium=phone')");
+        page.Click("phonePage().querySelector('.fg-phone-expand')");
+
+        Assert.False(page.Is("phonePage().querySelector('.fg-phone')"));
+        Assert.Contains(new PageCommand.Phone(false), page.Sent);
+        Assert.True(page.Is("guideWindow().classList.contains('is-open')"));
+        Assert.Equal(InWindow("/en/map/pre-market/"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_message_naming_another_site_is_ignored()
+    {
+        var page = WithPhone();
+
+        page.Click("phonePage().querySelector('.fg-app')");
+        page.Run("siteSays('field-guide-phone', '//elsewhere.example/')");
+        page.Click("phonePage().querySelector('.fg-phone-expand')");
+
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
     }
 
     [Fact]
