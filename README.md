@@ -23,7 +23,7 @@ While the pointer is over the window or the phone app is open, typing goes to th
 ## Install
 
 1. Install BepInEx. If no other mods were installed before, start the game once so BepInEx finishes setup, then quit.
-2. Download `FieldGuide-x.y.z.zip` from the [latest release](https://github.com/AnExiledDev/SurvivalLog-FieldGuide/releases/latest) and extract it into the game folder (the folder with `SurvivalLog.exe`), merging the folders. `FieldGuide.dll` ends up in `BepInEx\plugins\`.
+2. Download `FieldGuide-x.y.z.zip` from the [latest release](https://github.com/AnExiledDev/SurvivalLog-FieldGuide/releases/latest) or from [Nexus Mods](https://www.nexusmods.com/survivallog/mods/94) and extract it into the game folder (the folder with `SurvivalLog.exe`), merging the folders. `FieldGuide.dll` ends up in `BepInEx\plugins\`.
 
 ## Uninstall
 
