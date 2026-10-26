@@ -62,6 +62,35 @@ public class PageScriptTests
         Assert.Equal(1, page.Count("pageOf(/CoreUI1/).querySelectorAll('.fg-hud-btn')"));
     }
 
+    // The page check runs every 400 ms on every HUD page, so a button already in place must cost no search.
+    [Fact]
+    public void A_placed_hud_button_costs_the_page_check_no_search()
+    {
+        var page = Ready();
+
+        page.Run("var hud = openHud()");
+        page.Poll();
+        page.Run("var searches = countSearches(hud)");
+        page.Poll();
+        page.Poll();
+
+        Assert.Equal("0", page.Text("searches.count"));
+    }
+
+    [Fact]
+    public void A_hud_column_the_game_builds_again_gets_the_button_again()
+    {
+        var page = Ready();
+
+        page.Run("var hud = openHud()");
+        page.Poll();
+        page.Run("hud.querySelector('.vertical-tools').remove(); var column = hud.body.appendChild(new FakeElement('div', hud)); column.className = 'vertical-tools'");
+        page.Poll();
+
+        Assert.Equal(1, page.Count("hud.querySelectorAll('.fg-hud-btn')"));
+        Assert.True(page.Is("hud.querySelector('.fg-hud-btn').parentNode === column"));
+    }
+
     [Fact]
     public void Opening_shows_the_site_home_and_tells_the_plugin_where_the_window_is()
     {
@@ -652,6 +681,81 @@ public class PageScriptTests
         page.Run("flush(); nextFrame()");
 
         Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    // The game and other mods change the open phone page all the time. Once the app is in, a change must not search
+    // the page, or every change on the phone pays for it.
+    [Fact]
+    public void Once_the_app_is_in_changes_on_the_phone_page_search_nothing()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); var doc = phoneArrives(node); buildPhone(doc); nextFrame(); var grid = doc.querySelector('.app-grid'); var searches = countSearches(doc)");
+        page.Run("for (var i = 0; i < 20; i++) { grid.appendChild(new FakeElement('div', doc)); flush(); }");
+        page.Poll();
+        page.Run("nextFrame()");
+
+        Assert.Equal("0", page.Text("searches.count"));
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    [Fact]
+    public void An_app_the_game_takes_off_the_home_screen_goes_back_on()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); var doc = phoneArrives(node); buildPhone(doc); nextFrame()");
+        page.Run("doc.querySelector('.fg-app').remove(); flush()");
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+        Assert.True(page.Is("doc.querySelector('.fg-app').parentNode === doc.querySelector('.app-grid')"));
+    }
+
+    [Fact]
+    public void A_home_screen_the_game_builds_again_gets_the_app_again()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); var doc = phoneArrives(node); buildPhone(doc); nextFrame()");
+        page.Run("doc.querySelector('.sms-panel').remove(); flush()");
+        page.Run("buildPhone(doc); flush()");
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    // Exiled's Toolkit moves the app into the phone's dock; the app stays there and no second one goes in.
+    [Fact]
+    public void An_app_moved_elsewhere_on_the_phone_page_is_left_where_it_is()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); var doc = phoneArrives(node); buildPhone(doc); nextFrame()");
+        page.Run("var dock = doc.body.appendChild(new FakeElement('div', doc)); dock.appendChild(doc.querySelector('.fg-app')); flush()");
+        page.Poll();
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+        Assert.True(page.Is("doc.querySelector('.fg-app').parentNode === dock"));
+    }
+
+    // Each load of a phone frame starts a look for its page; a frame keeps only the newest, not one per load.
+    [Fact]
+    public void A_phone_frame_that_loads_again_keeps_one_look_for_its_page()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); fireLoad(node); fireLoad(node); nextFrame()");
+
+        Assert.Equal(1, page.Count("frameCallbacks"));
+    }
+
+    [Fact]
+    public void The_look_for_a_phone_page_that_never_comes_stops()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); for (var i = 0; i < 200; i++) nextFrame()");
+
+        Assert.Equal(0, page.Count("frameCallbacks"));
     }
 
     [Fact]

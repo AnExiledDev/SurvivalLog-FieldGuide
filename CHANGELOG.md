@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.10
+
+- The phone runs smoother: once the Field Guide app is on the phone, the mod no longer searches the phone's screen every time something on it changes.
+- Less background work on the HUD while the Field Guide button is in place.
+- Made for Survival Log 1.1.19611.
+
 ## 0.1.9
 
 - The Field Guide phone app is on the phone the moment the phone opens, instead of showing up a moment later.

@@ -141,6 +141,15 @@ var FakeElement = class {
 
   get parentNode() { return this.parentElement; }
 
+  // On the page while its topmost ancestor is the document's head or body.
+  get isConnected() {
+    var top = this;
+
+    while (top.parentElement) top = top.parentElement;
+
+    return top === this.ownerDocument.head || top === this.ownerDocument.body;
+  }
+
   get firstChild() { return this.children.length ? this.children[0] : null; }
 
   get className() { return this.classes.join(' '); }
@@ -484,6 +493,22 @@ function navigate(node, src) {
 
 function phonePage() {
   return pageOf(/PhoneSMS/);
+}
+
+// Counts the searches a document is asked for from now on.
+function countSearches(doc) {
+  var searches = { count: 0 };
+
+  ['querySelector', 'querySelectorAll', 'getElementById', 'getElementsByTagName'].forEach(function (name) {
+    var search = doc[name];
+
+    doc[name] = function () {
+      searches.count++;
+      return search.apply(doc, arguments);
+    };
+  });
+
+  return searches;
 }
 
 // A map page with one marker per shown location, in list order.

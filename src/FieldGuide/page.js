@@ -608,9 +608,13 @@
     if (typeof message !== 'string' || message.indexOf('8\u001e') !== 0) return;
     if (message.indexOf('"configId"') < 0 || message.indexOf('"itemId"') < 0) return;
 
-    var json = message.split('\u001e').slice(3).join('\u001e');
+    // The JSON starts after the third separator; it can hold separators itself, so the rest is taken whole.
+    var second = message.indexOf('\u001e', 2);
+    var at = second < 0 ? -1 : message.indexOf('\u001e', second + 1);
 
-    collectItems(JSON.parse(json));
+    if (at < 0) return;
+
+    collectItems(JSON.parse(message.substring(at + 1)));
   }
 
   function collectItems(node) {
@@ -618,9 +622,8 @@
 
     if (node.itemId != null && node.configId) rememberItem(String(node.itemId), node.configId);
 
-    for (var key in node) {
-      if (Object.prototype.hasOwnProperty.call(node, key)) collectItems(node[key]);
-    }
+    // Parsed JSON holds only its own keys, so no inherited ones need skipping.
+    for (var key in node) collectItems(node[key]);
   }
 
   function rememberItem(itemId, configId) {
@@ -730,7 +733,8 @@
         if (entry.pattern.test(page.src)) entry.patch(page.doc);
       });
 
-      if (/PhoneSMS\.html/.test(page.src) && page.frame.style.display !== 'none' && page.doc.querySelector('.' + PHONE_VIEW_CLASS)) isPhoneShown = true;
+      // Only asked while the app is open, so a closed app costs no search of the phone page.
+      if (phone.screen && !isPhoneShown && /PhoneSMS\.html/.test(page.src) && page.frame.style.display !== 'none' && page.doc.querySelector('.' + PHONE_VIEW_CLASS)) isPhoneShown = true;
     });
 
     if (phone.screen && !isPhoneShown) phoneClosed();
@@ -752,9 +756,13 @@
 
       if (!doc || !win || !PHONE_PAGE.test(String(win.location.href))) return false;
 
+      // The game and other mods change the phone page constantly while it is open, so once the app is in, each
+      // change costs one check that it is still on the page, and no search.
       if (!doc.fgPhoneWatched && typeof win.MutationObserver !== 'undefined') {
         doc.fgPhoneWatched = true;
-        new win.MutationObserver(function () { patchPhoneSafely(doc); }).observe(doc, { childList: true, subtree: true });
+        new win.MutationObserver(function () {
+          if (!hasPhoneApp(doc)) patchPhoneSafely(doc);
+        }).observe(doc, { childList: true, subtree: true });
       }
 
       patchPhoneSafely(doc);
@@ -773,11 +781,18 @@
   }
 
   // A new frame first holds an empty document; the phone page replaces it a moment later. Look each frame until it is
-  // there, for about two seconds at most.
-  function chasePhonePage(frame, framesLeft) {
-    if (watchPhonePage(frame) || framesLeft <= 0 || typeof requestAnimationFrame === 'undefined') return;
+  // there, for about two seconds at most. A new look at a frame ends the one before it, so a frame has one chase.
+  function chasePhonePage(frame) {
+    var chase = frame.fgPhoneChase = (frame.fgPhoneChase || 0) + 1;
+    var framesLeft = CHASE_FRAMES;
 
-    requestAnimationFrame(function () { chasePhonePage(frame, framesLeft - 1); });
+    function step() {
+      if (frame.fgPhoneChase !== chase || watchPhonePage(frame) || --framesLeft <= 0 || typeof requestAnimationFrame === 'undefined') return;
+
+      requestAnimationFrame(step);
+    }
+
+    step();
   }
 
   function onFrame(frame) {
@@ -785,10 +800,10 @@
 
     if (!frame.fgPhoneFrame) {
       frame.fgPhoneFrame = true;
-      frame.addEventListener('load', function () { chasePhonePage(frame, CHASE_FRAMES); });
+      frame.addEventListener('load', function () { chasePhonePage(frame); });
     }
 
-    chasePhonePage(frame, CHASE_FRAMES);
+    chasePhonePage(frame);
   }
 
   // Every game page is an iframe in this document: a new one, or one sent to a new address, is looked at at once.
@@ -826,17 +841,30 @@
   // First in the tool column: the column is anchored at the bottom, so the first child sits on top and the game's own
   // buttons do not move. The column hides itself in build mode, and the button with it.
   function placeHudButton(doc, buildButton) {
+    // Checked every page check, so a button still in the column it was put in costs no search.
+    var placed = doc.fgHudButton;
+
+    if (placed && placed.isConnected === true && placed.parentNode === doc.fgHudColumn) return;
+
     var column = doc.querySelector('.vertical-tools');
     var existing = doc.querySelector('.' + HUD_CLASS);
 
     if (!column) return;
-    if (existing && existing.parentNode === column) return;
+
+    if (existing && existing.parentNode === column) {
+      doc.fgHudButton = existing;
+      doc.fgHudColumn = column;
+      return;
+    }
+
     if (existing) existing.remove();
 
     var node = buildButton(doc);
 
     node.setAttribute('data-etk-dock', DOCK_ORDER);
     column.insertBefore(node, column.firstChild);
+    doc.fgHudButton = node;
+    doc.fgHudColumn = column;
 
     if (!hasReportedHudPlaced) send('diag|HUD button placed in the tool column');
     hasReportedHudPlaced = true;
@@ -907,14 +935,31 @@
     '.fg-phone-get:disabled{opacity:.6;cursor:default}'
   ].join('\n');
 
+  // The app this page was given, while it is still on the page. Exiled's Toolkit moves it into the phone's dock, which
+  // keeps it on the page.
+  function hasPhoneApp(doc) {
+    var app = doc.fgPhoneApp;
+
+    return !!app && app.isConnected === true;
+  }
+
   function patchPhone(doc) {
+    if (hasPhoneApp(doc)) return;
+
+    // Look for an app anywhere on the page, not only in the grid, in case one went in before this page was known.
+    var found = doc.querySelector('.' + PHONE_APP_CLASS);
+
+    if (found) {
+      doc.fgPhoneApp = found;
+      return;
+    }
+
     var grid = doc.querySelector('.app-grid');
 
-    // Exiled's Toolkit moves the app into the phone's dock, so look for it anywhere on the page, not only in the grid.
-    if (!grid || doc.querySelector('.' + PHONE_APP_CLASS)) return;
+    if (!grid) return;
 
     addPhoneStyle(doc);
-    grid.appendChild(phoneApp(doc));
+    doc.fgPhoneApp = grid.appendChild(phoneApp(doc));
 
     if (!hasReportedPhonePlaced) send('diag|app placed on the phone');
     hasReportedPhonePlaced = true;
