@@ -29,6 +29,9 @@ Works in English and Chinese.
 [*]Without the offline copy, reading the site needs an internet connection.[/*]
 [/list]
 
+[center][img]https://sldb.core-directive.com/img/mods-banner.jpg[/img]
+[size=4][url=https://www.nexusmods.com/survivallog/mods/73]Get Mod Manager[/url] to set up all your mods in game  |  [url=https://sldb.core-directive.com/en/]Open the Survival Log wiki[/url] for items, recipes and maps[/size][/center]
+
 [size=5]Requirements[/size]
 [list]
 [*]Survival Log 1.1.19611. A game update can break it until the mod is updated.[/*]
@@ -86,6 +89,8 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 [*]目前可在背包、交易界面、工作台和两张地图中查询，其他界面以后加入。[/*]
 [*]未下载离线版时，浏览网站需要联网。[/*]
 [/list]
+
+[url=https://www.nexusmods.com/survivallog/mods/73]获取 Mod Manager[/url]，在游戏里设置所有模组。[url=https://sldb.core-directive.com/zh/]打开 Survival Log 维基[/url]，物品、配方、地图一查就有。
 
 [size=5]前置要求[/size]
 [list]
