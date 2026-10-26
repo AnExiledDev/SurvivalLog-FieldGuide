@@ -573,6 +573,87 @@ public class PageScriptTests
         Assert.Equal("Field Guide", page.Text("phonePage().querySelector('.fg-app').querySelector('.app-label').textContent"));
     }
 
+    // The game shows a new phone page two frames after it starts, before the next page check: the app has to be there
+    // by then, not on the next poll.
+    [Fact]
+    public void A_phone_that_just_opened_has_the_app_by_the_next_frame_without_a_page_check()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); buildPhone(phoneArrives(node)); nextFrame()");
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    [Fact]
+    public void The_app_goes_in_as_soon_as_the_game_builds_the_home_screen()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); var doc = phoneArrives(node); nextFrame()");
+        Assert.Equal(0, page.Count("phonePage().querySelectorAll('.fg-app')"));
+
+        page.Run("buildPhone(doc); flush()");
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    [Fact]
+    public void Every_new_phone_page_gets_the_app_again()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); buildPhone(phoneArrives(node)); nextFrame()");
+        page.Run("dropPage(/PhoneSMS/); flush(); node = addPhoneFrame(); buildPhone(phoneArrives(node)); nextFrame()");
+
+        Assert.Equal(1, page.Count("document.querySelectorAll('iframe')"));
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    [Fact]
+    public void A_page_that_reloads_is_watched_again()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); buildPhone(phoneArrives(node)); nextFrame()");
+        page.Run("var doc = phoneArrives(node); fireLoad(node); buildPhone(doc); flush()");
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    [Fact]
+    public void A_frame_sent_to_the_phone_from_another_page_gets_the_app()
+    {
+        var page = Ready();
+
+        page.Run("var node = document.body.appendChild(new FakeElement('iframe', document)); node.src = 'file:///game/WebUI/UI/Bag/Bag.html'; node.contentDocument = new FakeDocument(node.src); flush()");
+        page.Run("navigate(node, PHONE_URL); buildPhone(phoneArrives(node)); nextFrame()");
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
+    [Fact]
+    public void Other_pages_never_get_the_app()
+    {
+        var page = Ready();
+
+        page.Run("var node = document.body.appendChild(new FakeElement('iframe', document)); node.src = 'file:///game/WebUI/UI/Bag/Bag.html'; node.contentDocument = buildPhone(new FakeDocument(node.src)); flush(); nextFrame()");
+
+        Assert.Equal(0, page.Count("node.contentDocument.querySelectorAll('.fg-app')"));
+    }
+
+    [Fact]
+    public void The_app_is_not_added_twice_when_the_watcher_and_the_page_check_both_run()
+    {
+        var page = Ready();
+
+        page.Run("var node = addPhoneFrame(); buildPhone(phoneArrives(node)); nextFrame()");
+        page.Poll();
+        page.Run("flush(); nextFrame()");
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
+    }
+
     [Fact]
     public void The_phone_app_shows_the_site_in_the_phone_and_holds_the_keyboard()
     {

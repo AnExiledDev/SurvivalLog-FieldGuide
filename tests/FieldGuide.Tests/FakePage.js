@@ -37,11 +37,92 @@ function getComputedStyle() {
   return { cursor: 'ew-resize' };
 }
 
+// Mutation observers, called only by flush(), the way a browser calls them before it paints, and animation frames
+// the tests run with nextFrame().
+var observers = [];
+var pendingObservers = [];
+var frameCallbacks = [];
+
+function MutationObserver(callback) {
+  this.callback = callback;
+  this.targets = [];
+  this.records = [];
+}
+
+MutationObserver.prototype.observe = function (target, options) {
+  this.targets.push({ node: target, options: options });
+
+  if (observers.indexOf(this) < 0) observers.push(this);
+};
+
+function isInside(node, ancestor) {
+  if (node.ownerDocument === ancestor) return true;
+
+  for (var at = node; at; at = at.parentElement) {
+    if (at === ancestor) return true;
+  }
+
+  return false;
+}
+
+function report(record) {
+  observers.forEach(function (observer) {
+    var hears = observer.targets.some(function (t) {
+      if (record.type === 'attributes' && (!t.options.attributes || (t.options.attributeFilter && t.options.attributeFilter.indexOf(record.attributeName) < 0))) return false;
+      if (record.type === 'childList' && !t.options.childList) return false;
+
+      return t.node === record.target || (t.options.subtree && isInside(record.target, t.node));
+    });
+
+    if (!hears) return;
+
+    observer.records.push(record);
+
+    if (pendingObservers.indexOf(observer) < 0) pendingObservers.push(observer);
+  });
+}
+
+function childrenChanged(parent, added) {
+  report({ type: 'childList', target: parent, addedNodes: added });
+}
+
+// An observer that keeps waking itself fails the test instead of hanging it.
+function flush() {
+  for (var round = 0; pendingObservers.length > 0; round++) {
+    if (round > 50) throw new Error('an observer keeps waking itself');
+
+    var due = pendingObservers;
+
+    pendingObservers = [];
+    due.forEach(function (observer) {
+      var records = observer.records;
+
+      observer.records = [];
+      observer.callback(records);
+    });
+  }
+}
+
+function requestAnimationFrame(callback) {
+  frameCallbacks.push(callback);
+
+  return frameCallbacks.length;
+}
+
+function nextFrame() {
+  var due = frameCallbacks;
+
+  frameCallbacks = [];
+  due.forEach(function (callback) { callback(); });
+  flush();
+}
+
 var FakeElement = class {
   constructor(tagName, ownerDocument) {
     var element = this;
 
-    this.tagName = tagName;
+    this.tagName = String(tagName).toUpperCase();
+    this.nodeType = 1;
     this.ownerDocument = ownerDocument;
     this.id = '';
     this.parentElement = null;
@@ -90,6 +171,7 @@ var FakeElement = class {
 
     child.parentElement = this;
     this.children.push(child);
+    childrenChanged(this, [child]);
 
     return child;
   }
@@ -101,6 +183,7 @@ var FakeElement = class {
 
     child.parentElement = this;
     this.children.splice(this.children.indexOf(before), 0, child);
+    childrenChanged(this, [child]);
 
     return child;
   }
@@ -111,6 +194,7 @@ var FakeElement = class {
     this.children[this.children.indexOf(old)] = child;
     child.parentElement = this;
     old.parentElement = null;
+    childrenChanged(this, [child]);
 
     return old;
   }
@@ -118,6 +202,7 @@ var FakeElement = class {
   removeChild(child) {
     this.children = this.children.filter(function (c) { return c !== child; });
     child.parentElement = null;
+    childrenChanged(this, []);
 
     return child;
   }
@@ -155,6 +240,10 @@ var FakeElement = class {
   querySelector(selector) {
     return this.querySelectorAll(selector)[0] || null;
   }
+
+  getElementsByTagName(tagName) {
+    return this.querySelectorAll(tagName);
+  }
 };
 
 // Compound selectors of a tag, classes, ids and attributes; the script uses nothing else.
@@ -175,7 +264,7 @@ function matchesStep(element, step) {
     case '[':
       return element.hasAttribute(step.slice(1, -1));
     default:
-      return element.tagName === step;
+      return element.tagName === step.toUpperCase();
   }
 }
 
@@ -193,10 +282,11 @@ function descendantsOf(roots) {
 }
 
 var FakeDocument = class {
-  constructor() {
+  constructor(href) {
+    this.listeners = {};
+    this.defaultView = { location: { href: href || 'about:blank' }, MutationObserver: MutationObserver };
     this.head = new FakeElement('head', this);
     this.body = new FakeElement('body', this);
-    this.listeners = {};
   }
 
   createElement(tagName) { return new FakeElement(tagName, this); }
@@ -218,10 +308,14 @@ var FakeDocument = class {
   querySelector(selector) {
     return this.querySelectorAll(selector)[0] || null;
   }
+
+  getElementsByTagName(tagName) {
+    return this.querySelectorAll(tagName);
+  }
 };
 
 // Root.html's own document, which holds the page iframes.
-var document = new FakeDocument();
+var document = new FakeDocument('file:///game/WebUI/Root.html');
 
 // What the script posts to the plugin.
 var posted = [];
@@ -299,7 +393,7 @@ function frame(src) {
   var node = document.body.appendChild(new FakeElement('iframe', document));
 
   node.src = src;
-  node.contentDocument = new FakeDocument();
+  node.contentDocument = new FakeDocument(src);
 
   return node.contentDocument;
 }
@@ -341,7 +435,12 @@ function hudButton() {
 
 // The phone's SMS page: its panel, and the home screen's app grid the game leaves empty.
 function openPhone() {
-  var doc = frame('file:///game/WebUI/UI/PhoneSMS/PhoneSMS.html');
+  return buildPhone(frame(PHONE_URL));
+}
+
+var PHONE_URL = 'file:///game/WebUI/UI/PhoneSMS/PhoneSMS.html';
+
+function buildPhone(doc) {
   var panel = doc.body.appendChild(new FakeElement('div', doc));
   var stage = panel.appendChild(new FakeElement('div', doc));
 
@@ -350,6 +449,37 @@ function openPhone() {
   stage.appendChild(new FakeElement('div', doc)).className = 'app-grid';
 
   return doc;
+}
+
+// The phone as the game opens it: the frame goes in holding an empty document, and the phone page takes its place a
+// moment later. The observers hear the new frame before anything paints.
+function addPhoneFrame() {
+  var node = document.body.appendChild(new FakeElement('iframe', document));
+
+  node.src = PHONE_URL;
+  node.contentDocument = new FakeDocument('about:blank');
+  flush();
+
+  return node;
+}
+
+function phoneArrives(node) {
+  node.contentDocument = new FakeDocument(node.src);
+
+  return node.contentDocument;
+}
+
+function fireLoad(node) {
+  (node.listeners.load || []).slice().forEach(function (listener) { listener({ type: 'load', target: node }); });
+  flush();
+}
+
+// A frame that already holds a page is sent to another one.
+function navigate(node, src) {
+  node.src = src;
+  node.contentDocument = new FakeDocument('about:blank');
+  report({ type: 'attributes', target: node, attributeName: 'src' });
+  flush();
 }
 
 function phonePage() {

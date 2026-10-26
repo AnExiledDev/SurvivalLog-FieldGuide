@@ -13,6 +13,8 @@
   var PHONE_APP_CLASS = 'fg-app';
   var PHONE_VIEW_CLASS = 'fg-phone';
   var PHONE_STYLE_ID = 'fg-phone-style';
+  var PHONE_PAGE = /PhoneSMS\.html/;
+  var CHASE_FRAMES = 120;
   var MIN_W = 0.15;
   var MIN_H = 0.2;
   // The site's text size in the window, in percent (TextSize.cs).
@@ -740,6 +742,87 @@
     } catch (e) {}
   }
 
+  // The game builds a new phone page every time the phone opens and shows it two frames after the page starts, long
+  // before the next page check. So a phone page is watched from the moment its frame appears, and the app goes in
+  // while the game builds the page. The observer runs before the next paint; patchPhone only adds what is missing.
+  function watchPhonePage(frame) {
+    try {
+      var doc = frame.contentDocument;
+      var win = doc && doc.defaultView;
+
+      if (!doc || !win || !PHONE_PAGE.test(String(win.location.href))) return false;
+
+      if (!doc.fgPhoneWatched && typeof win.MutationObserver !== 'undefined') {
+        doc.fgPhoneWatched = true;
+        new win.MutationObserver(function () { patchPhoneSafely(doc); }).observe(doc, { childList: true, subtree: true });
+      }
+
+      patchPhoneSafely(doc);
+
+      return true;
+    } catch (e) {
+      // A page from another origin, or one being torn down: the page check tries again.
+      return true;
+    }
+  }
+
+  function patchPhoneSafely(doc) {
+    try {
+      patchPhone(doc);
+    } catch (e) {}
+  }
+
+  // A new frame first holds an empty document; the phone page replaces it a moment later. Look each frame until it is
+  // there, for about two seconds at most.
+  function chasePhonePage(frame, framesLeft) {
+    if (watchPhonePage(frame) || framesLeft <= 0 || typeof requestAnimationFrame === 'undefined') return;
+
+    requestAnimationFrame(function () { chasePhonePage(frame, framesLeft - 1); });
+  }
+
+  function onFrame(frame) {
+    if (!PHONE_PAGE.test(String(frame.src || ''))) return;
+
+    if (!frame.fgPhoneFrame) {
+      frame.fgPhoneFrame = true;
+      frame.addEventListener('load', function () { chasePhonePage(frame, CHASE_FRAMES); });
+    }
+
+    chasePhonePage(frame, CHASE_FRAMES);
+  }
+
+  // Every game page is an iframe in this document: a new one, or one sent to a new address, is looked at at once.
+  function watchFrames() {
+    if (typeof MutationObserver === 'undefined') return;
+
+    new MutationObserver(function (records) {
+      for (var i = 0; i < records.length; i++) {
+        var record = records[i];
+
+        if (record.type === 'attributes') {
+          if (record.target.tagName === 'IFRAME') onFrame(record.target);
+
+          continue;
+        }
+
+        for (var j = 0; j < record.addedNodes.length; j++) {
+          var node = record.addedNodes[j];
+
+          if (node.nodeType !== 1) continue;
+
+          if (node.tagName === 'IFRAME') {
+            onFrame(node);
+            continue;
+          }
+
+          var inner = node.getElementsByTagName('iframe');
+
+          for (var k = 0; k < inner.length; k++) onFrame(inner[k]);
+        }
+      }
+    }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+  }
+
   // First in the tool column: the column is anchored at the bottom, so the first child sits on top and the game's own
   // buttons do not move. The column hides itself in build mode, and the button with it.
   function placeHudButton(doc, buildButton) {
@@ -1008,6 +1091,7 @@
 
   // ===== Start =====
 
+  watchFrames();
   setInterval(patchPagesSafely, 400);
   window.addEventListener('message', onSiteMessage);
   // The plugin forgets the window's place, and a drag, if it stops hearing about them.

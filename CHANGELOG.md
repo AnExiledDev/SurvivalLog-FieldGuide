@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.9
+
+- The Field Guide phone app is on the phone the moment the phone opens, instead of showing up a moment later.
+- Made for Survival Log 1.1.19611.
+
 ## 0.1.8
 
 - With Exiled's Toolkit 0.8.0 or newer, the Field Guide phone app sits in the phone's dock at the bottom, after the game's own apps, instead of in the middle of the home screen over the notifications.
