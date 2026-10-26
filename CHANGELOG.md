@@ -47,7 +47,7 @@
 
 ## 0.1.0
 
-- First version.
+- First release.
 - A window with the Survival Log Database that can be dragged anywhere and resized from any edge or corner. It remembers where you left it.
 - `/` over a backpack item, a trader's shelf item or a map location opens its page. Over nothing it opens or closes the window.
 - A book button on the HUD tool column opens and closes the window.
