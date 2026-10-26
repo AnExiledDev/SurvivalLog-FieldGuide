@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.11
+
+- Fixed: the search box in the Field Guide now accepts Chinese and other typing that needs an input method.
+- Made for Survival Log 1.1.19611.
+
 ## 0.1.10
 
 - The phone runs smoother: once the Field Guide app is on the phone, the mod no longer searches the phone's screen every time something on it changes.
