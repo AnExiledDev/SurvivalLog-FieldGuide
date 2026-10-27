@@ -220,6 +220,14 @@ var FakeElement = class {
     if (this.parentElement) this.parentElement.removeChild(this);
   }
 
+  // The box on screen, as Chromium gives it: what the page laid out (offsetWidth and offsetHeight, which tests set,
+  // in the element's own px) times the element's zoom.
+  getBoundingClientRect() {
+    var zoom = Number(this.style.zoom) || 1;
+
+    return { width: (this.offsetWidth || 0) * zoom, height: (this.offsetHeight || 0) * zoom };
+  }
+
   contains(other) {
     for (var element = other; element; element = element.parentElement) {
       if (element === this) return true;

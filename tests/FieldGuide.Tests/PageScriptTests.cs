@@ -407,6 +407,93 @@ public class PageScriptTests
         Assert.Equal(Local + "/en/items/crackers/", page.Text("guideFrame().src"));
     }
 
+    // ===== UI size (Exiled's Toolkit) =====
+
+    // Stands in for Exiled's Toolkit's window.ExiledUi: keeps what each call handed it, and zoomTo(z) draws every
+    // handed element at z and tells its mod, as the Toolkit does after a change.
+    private const string FakeUi = "var handed = []; window.ExiledUi = { size: function (el, options) { handed.push({ el: el, options: options }); } };" +
+        "function zoomTo(z) { handed.forEach(function (h) { h.el.style.zoom = String(z); if (h.options.onZoom) h.options.onZoom(z); }); }";
+
+    private static PageScript OpenedWithToolkit()
+    {
+        var page = Ready();
+
+        page.Run(FakeUi);
+        page.Toggle();
+        page.Forget();
+
+        return page;
+    }
+
+    [Fact]
+    public void The_window_is_handed_to_the_toolkit_once_and_never_shrunk()
+    {
+        var page = OpenedWithToolkit();
+
+        page.Toggle();
+        page.Toggle();
+
+        // Opening again reuses the window it built, so the Toolkit is not handed it twice.
+        Assert.Equal("1", page.Text("handed.length"));
+        Assert.True(page.Is("handed[0].el === guideWindow()"));
+        // The player sized the window, so it is never shrunk to fit.
+        Assert.True(page.Is("handed[0].options.fit === false"));
+    }
+
+    [Fact]
+    public void A_window_the_page_lost_is_handed_again_when_it_is_built_anew()
+    {
+        var page = OpenedWithToolkit();
+
+        page.Toggle();
+        page.Run("guideWindow().remove()");
+        page.Toggle();
+
+        Assert.Equal("2", page.Text("handed.length"));
+        Assert.True(page.Is("handed[1].el === guideWindow()"));
+        Assert.True(page.Is("handed[1].options.fit === false"));
+    }
+
+    [Fact]
+    public void Before_the_toolkit_has_loaded_the_window_waits_in_the_list_it_reads()
+    {
+        var page = Opened();
+
+        Assert.Equal("1", page.Text("window.__exiledUiWait.length"));
+        Assert.True(page.Is("window.__exiledUiWait[0][0] === guideWindow()"));
+        Assert.True(page.Is("window.__exiledUiWait[0][1].fit === false"));
+    }
+
+    [Fact]
+    public void A_bigger_ui_size_keeps_the_window_where_the_player_put_it()
+    {
+        var page = OpenedWithToolkit();
+
+        page.Run("zoomTo(2)");
+
+        // Lengths inside the window are doubled on screen, so its place is written at half to land on the same spot.
+        Assert.Equal("30vw", page.Text("guideWindow().style.left"));
+        Assert.Equal("4vh", page.Text("guideWindow().style.top"));
+        Assert.Equal("18vw", page.Text("guideWindow().style.width"));
+        Assert.Equal("40vh", page.Text("guideWindow().style.height"));
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.6, 0.08, 0.36, 0.8)), page.Sent[^1]);
+    }
+
+    [Fact]
+    public void A_minimized_bar_at_a_bigger_ui_size_keeps_the_clicks_over_all_of_it()
+    {
+        var page = OpenedWithToolkit();
+
+        // The bar lays out 125 px wide in its own px, drawn at twice that.
+        page.Run("guideWindow().offsetWidth = 125");
+        page.Run("zoomTo(2)");
+        page.Forget();
+        page.Click("windowButton('minimize')");
+
+        // 250 of 1000 px wide and the 22 px bar drawn 44 px high on a 500 px page.
+        Assert.Equal(new PageCommand.Shown(new NormalRect(0.71, 0.08, 0.25, 0.088)), page.Sent[^1]);
+    }
+
     // ===== Offline with no copy =====
 
     [Fact]

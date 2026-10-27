@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.12
+
+- What is in the Field Guide window can be drawn bigger or smaller with the UI size setting of Exiled's Toolkit 0.10.0 or newer. A change shows at once, and the window stays where you put it, at the size you gave it.
+- The book button and the phone app keep the game's size.
+- Made for Survival Log 1.1.19611.
+
 ## 0.1.11
 
 - Fixed: the search box in the Field Guide now accepts Chinese and other typing that needs an input method.

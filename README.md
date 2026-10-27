@@ -6,6 +6,7 @@ A BepInEx mod for Survival Log. Read the [Survival Log Database](https://sldb.co
 
 - **Look things up with `/`:** hover an item in your backpack, on a trader's shelf or in a workbench (brewer, cooker, freezer and the rest), or a location on the map, and press `/` to open its page. Over nothing, `/` opens or closes the window.
 - **A window you place yourself:** drag it by its title bar and resize it from any edge or corner. It opens where you left it, at the size you left it. `A-` and `A+` on the title bar make the text smaller or larger. The buttons at the top right minimize it to its title bar, maximize it to fill the screen, or close it.
+- **UI size**: with Exiled's Toolkit 0.10.0 or newer, its UI size setting (`UiScale`) draws what is in the window bigger or smaller. The window keeps the place and size you gave it. The book button and the phone app keep the game's size.
 - **Book button on the HUD:** a book button in the bottom-left tool column opens and closes the window.
 - **Phone app:** the phone's home screen gets a Field Guide app that shows the site's phone layout. Its top bar minimizes it (it opens again on the same page), moves the page to the large window, or closes it; `Back` closes it too.
 - **Offline copy:** the title bar offers `Download for offline` (about 150 MB). Once downloaded, the guide reads the copy on your PC, no internet needed, and offers an update when the site has a newer one.
@@ -18,7 +19,7 @@ While the pointer is over the window or the phone app is open, typing goes to th
 - Survival Log 1.1.19611. A game update can break it until the mod is updated.
 - [BepInEx for Survival Log](https://www.nexusmods.com/survivallog/mods/12). Install it first.
 - An internet connection to read the site online or to download the offline copy.
-- Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps; without it, it shows in the middle of the phone's home screen.
+- Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps; without it, it shows in the middle of the phone's home screen. With 0.10.0 or newer, its UI size setting also sizes what is in the window.
 
 ## Install
 

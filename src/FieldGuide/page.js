@@ -225,6 +225,8 @@
 
     document.body.appendChild(root);
     document.body.appendChild(shield);
+    // The window is as big as the player made it, so it is never shrunk; each new size places it again.
+    uiSize(root, { fit: false, onZoom: onZoom });
 
     root.addEventListener('click', onClick);
     root.addEventListener('mousedown', onMouseDown);
@@ -233,6 +235,34 @@
 
     ui = { root: root, bar: bar, body: body, frame: frame, shield: shield };
     path = null;
+  }
+
+  // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. Before the Toolkit's script has loaded it
+  // waits in a list the Toolkit reads; without the Toolkit nothing happens.
+  function uiSize(node, options) {
+    var toolkit = window.ExiledUi;
+
+    if (toolkit) {
+      toolkit.size(node, options);
+      return;
+    }
+
+    var waiting = window.__exiledUiWait = window.__exiledUiWait || [];
+    waiting.push([node, options]);
+    if (waiting.length > 32) waiting.shift();
+  }
+
+  // The UI size the Toolkit draws the window at. Every length inside the window is multiplied by it, its place on
+  // screen included, so place() divides that back out.
+  function zoom() {
+    var value = ui ? Number(ui.root.style.zoom) : 0;
+
+    return value > 0 ? value : 1;
+  }
+
+  function onZoom() {
+    place();
+    report();
   }
 
   function actButton(act, className, text) {
@@ -317,26 +347,27 @@
   function place() {
     var style = ui.root.style;
     var shown = isMaximized ? { x: 0, y: 0, w: 1, h: 1 } : rect;
+    var share = 100 / zoom();
 
-    style.top = shown.y * 100 + 'vh';
+    style.top = shown.y * share + 'vh';
 
     if (isMinimized) {
       style.left = 'auto';
-      style.right = (1 - shown.x - shown.w) * 100 + 'vw';
+      style.right = (1 - shown.x - shown.w) * share + 'vw';
       style.width = 'auto';
       style.height = BAR_PX + 'px';
       return;
     }
 
     style.right = 'auto';
-    style.left = shown.x * 100 + 'vw';
-    style.width = shown.w * 100 + 'vw';
-    style.height = shown.h * 100 + 'vh';
+    style.left = shown.x * share + 'vw';
+    style.width = shown.w * share + 'vw';
+    style.height = shown.h * share + 'vh';
   }
 
-  // The bar's own width once it has shrunk; before the page has laid it out, the window's width.
+  // The bar's width on screen once it has shrunk; before the page has laid it out, the window's width.
   function barWidth(shown) {
-    var px = ui ? ui.root.offsetWidth : 0;
+    var px = ui ? ui.root.getBoundingClientRect().width : 0;
 
     return px > 0 ? Math.min(px / window.innerWidth, shown.w) : shown.w;
   }
@@ -362,7 +393,7 @@
 
     var w = barWidth(shown);
 
-    return { x: shown.x + shown.w - w, y: shown.y, w: w, h: Math.min(BAR_PX / window.innerHeight, shown.h) };
+    return { x: shown.x + shown.w - w, y: shown.y, w: w, h: Math.min(BAR_PX * zoom() / window.innerHeight, shown.h) };
   }
 
   // Maximize and minimize change only how the window is shown, never the place the player saved.
