@@ -2,6 +2,8 @@ Name: Field Guide
 Summary: The Survival Log Database inside the game. Hover an item or a map location and press / to open its page in a window you can drag anywhere and resize from any edge. A HUD button opens it too, and the phone gets a Field Guide app. Download the whole site once to read it offline. English or Chinese, following the game's language.
 
 Description (BBCode):
+[center][img]https://sldb.core-directive.com/media/save/1-save-safe.png[/img][/center]
+
 Stop alt-tabbing to look things up. Field Guide puts the [url=https://sldb.core-directive.com/en/]Survival Log Database[/url] (items, crafting, maps, loot and more) in a window inside the game, right where you need it.
 
 [size=5]Main features[/size]
