@@ -11,7 +11,7 @@ namespace FieldGuide;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.fieldguide";
-    private const string Version = "0.1.12";
+    private const string Version = "0.1.13";
 
     public override void Load()
     {

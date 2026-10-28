@@ -609,9 +609,15 @@
 
     doc.__fgWatched = true;
     doc.__fgMarker = -1;
+    doc.__fgMarkerNode = null;
+    // Mouseover fires for every element the pointer crosses, so the markers are only counted again once the pointer
+    // reaches another marker or leaves them.
     doc.addEventListener('mouseover', function (e) {
       var marker = e.target && e.target.closest ? e.target.closest('.map-marker') : null;
 
+      if (marker === doc.__fgMarkerNode) return;
+
+      doc.__fgMarkerNode = marker;
       doc.__fgMarker = marker ? Array.prototype.indexOf.call(doc.querySelectorAll('.map-marker'), marker) : -1;
     });
   }
@@ -637,7 +643,7 @@
   // Root.html's protocol: type 8 hands a page a message, fields split by the record separator, JSON last.
   function learnItems(message) {
     if (typeof message !== 'string' || message.indexOf('8\u001e') !== 0) return;
-    if (message.indexOf('"configId"') < 0 || message.indexOf('"itemId"') < 0) return;
+    if (message.indexOf('"configId"') < 0 || !hasNewItem(message)) return;
 
     // The JSON starts after the third separator; it can hold separators itself, so the rest is taken whole.
     var second = message.indexOf('\u001e', 2);
@@ -646,6 +652,26 @@
     if (at < 0) return;
 
     collectItems(JSON.parse(message.substring(at + 1)));
+  }
+
+  var ITEM_ID = /"itemId":"?(-?\d+)/g;
+
+  // The game sends many messages a second, some of them large, and most only repeat items already learned. Their item
+  // ids are read straight from the text, so only a message with an item not seen yet is parsed. With no id in a form
+  // this read knows, the message is parsed to be sure.
+  function hasNewItem(message) {
+    var seen = 0;
+    var match;
+
+    ITEM_ID.lastIndex = 0;
+
+    while ((match = ITEM_ID.exec(message))) {
+      seen++;
+
+      if (!(match[1] in itemConfigs)) return true;
+    }
+
+    return seen === 0 && message.indexOf('"itemId"') >= 0;
   }
 
   function collectItems(node) {

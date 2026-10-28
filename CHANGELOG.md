@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.13
+
+- The game's screens do less work with Field Guide installed: what the game sends a screen is only read again when it holds an item Field Guide has not seen yet, and moving the pointer across the map does less work.
+- Made for Survival Log 1.1.19611.
+
 ## 0.1.12
 
 - What is in the Field Guide window can be drawn bigger or smaller with the UI size setting of Exiled's Toolkit 0.10.0 or newer. A change shows at once, and the window stays where you put it, at the size you gave it.

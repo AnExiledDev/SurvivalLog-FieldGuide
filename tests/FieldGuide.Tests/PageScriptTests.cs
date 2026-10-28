@@ -567,6 +567,36 @@ public class PageScriptTests
     }
 
     [Fact]
+    public void A_message_that_only_repeats_learned_items_is_not_parsed_again()
+    {
+        var page = Ready();
+
+        page.Run("var brew = workbenchPage('file:///game/WebUI/UI/BrewPanel/BrewPanel.html', [70001, 70002])");
+        page.Poll();
+        page.Run("var parses = 0; var realParse = JSON.parse; JSON.parse = function (text) { parses++; return realParse(text); }");
+        page.Run("unitySays('BrewPanel', 'Refresh', { items: [{ itemId: 70001, configId: 1201 }, { itemId: 70002, configId: 1305 }] })");
+        page.Run("unitySays('BrewPanel', 'Refresh', { items: [{ itemId: 70002, configId: 1305, count: 4 }, { itemId: 70001, configId: 1201 }] })");
+        page.Run("JSON.parse = realParse");
+
+        Assert.Equal("1", page.Text("parses"));
+    }
+
+    [Fact]
+    public void A_new_item_among_learned_ones_is_still_learned()
+    {
+        var page = Ready();
+
+        page.Run("var brew = workbenchPage('file:///game/WebUI/UI/BrewPanel/BrewPanel.html', [70001, 70002])");
+        page.Poll();
+        page.Run("unitySays('BrewPanel', 'Refresh', [{ itemId: 70001, configId: 1201 }])");
+        page.Run("unitySays('BrewPanel', 'Refresh', [{ itemId: 70001, configId: 1201 }, { itemId: '70002', configId: 1305 }])");
+        page.Run("fire('mouseover', itemIcon(brew, 70002))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/go/?item=1305"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
     public void A_workbench_item_the_game_never_named_is_not_a_hover()
     {
         var page = Ready();
@@ -617,6 +647,24 @@ public class PageScriptTests
         page.Lookup();
 
         Assert.Equal(InWindow("/en/go/?place=11"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void Moving_from_one_map_marker_to_the_next_looks_up_the_next()
+    {
+        var page = Ready();
+
+        page.Run("var map = openMap('ExploreMap', [{ configId: 10, lockState: 0 }, { configId: 11, lockState: 0 }, { configId: 12, lockState: 0, isActive: true }])");
+        page.Poll();
+        page.Run("fire('mouseover', marker(map, 0)); fire('mouseover', marker(map, 1))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/go/?place=11"), page.Text("guideFrame().src"));
+
+        page.Run("fire('mouseover', map.body)");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/go/?place=12"), page.Text("guideFrame().src"));
     }
 
     [Fact]
