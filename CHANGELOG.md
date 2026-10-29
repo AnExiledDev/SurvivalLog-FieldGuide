@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+
+- New: `UiScale` under Interface sets the size of Field Guide's own windows on their own, from 75% to 200%, whatever Exiled's Toolkit's UI size is. At 0, the default, they follow the Toolkit's. Needs Exiled's Toolkit 0.11.0 or newer.
+- Made for Survival Log 1.1.19611.
+
 ## 0.1.13
 
 - The game's screens do less work with Field Guide installed: what the game sends a screen is only read again when it holds an item Field Guide has not seen yet, and moving the pointer across the map does less work.

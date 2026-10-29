@@ -435,6 +435,7 @@ public class PageScriptTests
 
         // Opening again reuses the window it built, so the Toolkit is not handed it twice.
         Assert.Equal("1", page.Text("handed.length"));
+        Assert.Equal("1", page.Text("handed.filter(function (h) { return h.options.mod === 'FieldGuide'; }).length"));
         Assert.True(page.Is("handed[0].el === guideWindow()"));
         // The player sized the window, so it is never shrunk to fit.
         Assert.True(page.Is("handed[0].options.fit === false"));

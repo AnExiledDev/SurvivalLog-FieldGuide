@@ -11,7 +11,7 @@ namespace FieldGuide;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.fieldguide";
-    private const string Version = "0.1.13";
+    private const string Version = "0.2.0";
 
     public override void Load()
     {
@@ -19,6 +19,8 @@ public sealed class Plugin : BasePlugin
         var harmony = new Harmony(Guid);
         var offline = new OfflineCopy(Path.Combine(Paths.BepInExRootPath, "FieldGuide"), log.Write);
         var session = new GuideSession(new WebPage(log.Write), offline, new LocalServer(offline.SiteFolder, log.Write), new GuideSettings(Config), log.Write);
+
+        OptionalUiSize.Bind(Config);
 
         log.Write($"===== Field Guide {Version} started");
         InputGate.Apply(harmony, log.Write);
