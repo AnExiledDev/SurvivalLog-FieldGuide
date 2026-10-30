@@ -37,9 +37,9 @@ Works in English and Chinese.
 
 [size=5]Requirements[/size]
 [list]
-[*]Survival Log 1.1.19611. A game update can break it until the mod is updated.[/*]
+[*]Survival Log 1.1.20151. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]. Install it first.[/*]
-[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps. With 0.10.0 or newer, its UI size setting also sizes what is in the window.[/*]
+[*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps. With 0.10.0 or newer, its UI size setting also sizes what is in the window. With 0.12.0 or newer, the / key does nothing while you type in a text box in any mod's window.[/*]
 [/list]
 
 [size=5]Installation[/size]
@@ -98,9 +98,9 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 
 [size=5]前置要求[/size]
 [list]
-[*]Survival Log 1.1.19611。游戏更新后，在模组更新前可能无法使用。[/*]
+[*]Survival Log 1.1.20151。游戏更新后，在模组更新前可能无法使用。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]，请先安装。[/*]
-[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 或更新版本。安装后手机应用会和游戏自带的应用一起放在手机底部的程序栏里。0.10.0 或更新版本还能用它的界面大小设置调整窗口里内容的大小。[/*]
+[*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 或更新版本。安装后手机应用会和游戏自带的应用一起放在手机底部的程序栏里。0.10.0 或更新版本还能用它的界面大小设置调整窗口里内容的大小。0.12.0 或更新版本下，在任何模组窗口的输入框里打字时 / 键不起作用。[/*]
 [/list]
 
 [size=5]安装[/size]

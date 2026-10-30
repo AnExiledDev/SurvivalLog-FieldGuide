@@ -14,8 +14,8 @@ public class PageScriptTests
 
     private static string OnPhone(string path) => Online + path + "?utm_source=field-guide&utm_medium=phone";
 
-    private static string ViewOf(string? siteBase, OfflineState? state = null, bool isChinese = false, int textSize = TextSize.Default) =>
-        GuideView.Json(siteBase, isChinese, WindowLayout.Default, textSize, state ?? new OfflineState.Ready("v1", 0), "/");
+    private static string ViewOf(string? siteBase, OfflineState? state = null, bool isChinese = false, int textSize = TextSize.Default, string hotkey = "/") =>
+        GuideView.Json(siteBase, isChinese, WindowLayout.Default, textSize, state ?? new OfflineState.Ready("v1", 0), hotkey);
 
     private static PageScript Ready(string? siteBase = Online, OfflineState? state = null)
     {
@@ -48,6 +48,34 @@ public class PageScriptTests
         page.Click("hudButton().querySelector('svg')");
 
         Assert.Contains(new PageCommand.Toggle(), page.Sent);
+    }
+
+    [Fact]
+    public void The_hud_tip_names_the_look_up_key()
+    {
+        var page = Ready();
+
+        page.Run("openHud()");
+        page.Poll();
+
+        Assert.Equal("The Survival Log Database. Hover an item or a map location and press / to look it up", page.Text("hudButton().querySelector('.entry-tip-body').textContent"));
+    }
+
+    [Fact]
+    public void An_unbound_look_up_key_is_left_out_of_the_hud_tip_and_a_key_set_later_shows()
+    {
+        var page = new PageScript();
+
+        page.Setup(ViewOf(Online, hotkey: ""));
+        page.Run("openHud()");
+        page.Poll();
+
+        Assert.Equal("The Survival Log Database", page.Text("hudButton().querySelector('.entry-tip-body').textContent"));
+
+        page.Setup(ViewOf(Online, hotkey: "F1"));
+        page.Poll();
+
+        Assert.Contains("press F1 to look it up", page.Text("hudButton().querySelector('.entry-tip-body').textContent"));
     }
 
     [Fact]

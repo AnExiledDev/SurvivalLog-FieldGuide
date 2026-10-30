@@ -6,7 +6,7 @@ Settings live in `BepInEx\config\com.dev.survivallog.fieldguide.cfg`, created th
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `Hotkey` | `Slash` (`/`) | Opens the page for what the pointer is over (a backpack item, a trader's shelf item, a workbench item, a map location), or opens and closes the window over anything else. Ignored while the pointer is over the window. `None` leaves only the HUD button. |
+| `Hotkey` | `Slash` (`/`) | Opens the page for what the pointer is over (a backpack item, a trader's shelf item, a workbench item, a map location), or opens and closes the window over anything else. Ignored while the pointer is over the window, and while you type in a text box in any mod's window (with Exiled's Toolkit 0.12.0 or newer). `None` leaves only the HUD button, which opens and closes the window but cannot look up what the pointer is over; the HUD button's tip then leaves the key out. |
 
 ## Site
 

@@ -10,6 +10,7 @@ public static class Texts
     {
         ["title"] = ("Field Guide", "野外指南"),
         ["tip"] = ("The Survival Log Database. Hover an item or a map location and press {0} to look it up", "生存日志数据库。悬停在物品或地图地点上按 {0} 即可查看"),
+        ["tipNoKey"] = ("The Survival Log Database", "生存日志数据库"),
         ["home"] = ("Home", "首页"),
         ["close"] = ("Close", "关闭"),
         ["smaller"] = ("Smaller text", "缩小文字"),

@@ -44,6 +44,7 @@
   // The plugin hands over the words in the game's language before every call (Texts.cs); English stands in until then.
   var ENGLISH = {
     title: 'Field Guide', tip: 'The Survival Log Database. Hover an item or a map location and press {0} to look it up',
+    tipNoKey: 'The Survival Log Database',
     home: 'Home', close: 'Close', back: 'Back', smaller: 'Smaller text', bigger: 'Larger text',
     minimize: 'Minimize', maximize: 'Maximize', restore: 'Restore', expand: 'Open in the large window',
     needCopy: 'Source is set to Offline and there is no offline copy yet. Download it here, or set Source to Auto to read the site online.'
@@ -902,7 +903,11 @@
     // Checked every page check, so a button still in the column it was put in costs no search.
     var placed = doc.fgHudButton;
 
-    if (placed && placed.isConnected === true && placed.parentNode === doc.fgHudColumn) return;
+    if (placed && placed.isConnected === true && placed.parentNode === doc.fgHudColumn) {
+      if (doc.fgTipKey !== view.hotkey) showTipKey(doc);
+
+      return;
+    }
 
     var column = doc.querySelector('.vertical-tools');
     var existing = doc.querySelector('.' + HUD_CLASS);
@@ -935,10 +940,23 @@
     var tip = make(doc, 'div', 'entry-tip');
 
     tip.appendChild(make(doc, 'div', 'entry-tip-title', say('title')));
-    tip.appendChild(make(doc, 'div', 'entry-tip-body', say('tip', view.hotkey)));
+    doc.fgTipBody = tip.appendChild(make(doc, 'div', 'entry-tip-body', tipText()));
+    doc.fgTipKey = view.hotkey;
     node.appendChild(tip);
 
     return node;
+  }
+
+  // The tip names the look-up key, or leaves it out when no key is set.
+  function tipText() {
+    return view.hotkey ? say('tip', view.hotkey) : say('tipNoKey');
+  }
+
+  // A key changed in game reaches a button already in place at the next page check.
+  function showTipKey(doc) {
+    doc.fgTipKey = view.hotkey;
+
+    if (doc.fgTipBody) doc.fgTipBody.textContent = tipText();
   }
 
   // CoreUI0's tool buttons sit in a wrapper with their hover tip beside them, to the right.
@@ -947,7 +965,8 @@
     var tip = make(doc, 'div', 'btn-tooltip btn-tooltip--right');
 
     tip.appendChild(make(doc, 'div', 'tip-name', say('title')));
-    tip.appendChild(make(doc, 'div', 'tip-desc', say('tip', view.hotkey)));
+    doc.fgTipBody = tip.appendChild(make(doc, 'div', 'tip-desc', tipText()));
+    doc.fgTipKey = view.hotkey;
     wrapper.appendChild(toggleButton(doc, 'ui-btn icon-sq interactive-btn'));
     wrapper.appendChild(tip);
 

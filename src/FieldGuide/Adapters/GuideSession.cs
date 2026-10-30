@@ -25,6 +25,8 @@ internal sealed class GuideSession
     private float _dragHeardAt = float.NegativeInfinity;
     private bool _isPhoneOpen;
     private bool _isHoldingKeyboard;
+    private readonly Func<bool> _isHotkeyDown;
+    private static readonly Func<bool> IsTyping = OptionalLive.IsTyping;
 
     public GuideSession(WebPage page, OfflineCopy offline, LocalServer server, GuideSettings settings, Action<string> log)
     {
@@ -33,6 +35,7 @@ internal sealed class GuideSession
         _server = server;
         _settings = settings;
         _log = log;
+        _isHotkeyDown = () => Input.GetKeyDown(_settings.Hotkey);
     }
 
     public void Update()
@@ -48,7 +51,7 @@ internal sealed class GuideSession
         InputGate.SetArea(_area.At(now));
         HoldKeyboard(InputGate.IsPointerOver || _isPhoneOpen || isDragging);
 
-        if (!_isHoldingKeyboard && _settings.Hotkey != KeyCode.None && Input.GetKeyDown(_settings.Hotkey)) _page.Lookup(GameLanguage.IsChinese());
+        if (!_isHoldingKeyboard && Hotkey.Fires(_settings.Hotkey != KeyCode.None, _isHotkeyDown, IsTyping)) _page.Lookup(GameLanguage.IsChinese());
 
         SendViewIfChanged(now);
     }

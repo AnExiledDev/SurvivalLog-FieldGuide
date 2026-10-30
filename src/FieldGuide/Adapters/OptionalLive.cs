@@ -19,6 +19,8 @@ internal static class OptionalLive
 
     public const string MissingNote = "Exiled's Toolkit is not installed, so settings are read once at start. Install Toolkit 0.4.0 or newer to change settings in game without a restart.";
 
+    private static bool _canAskTyping = true;
+
     private static readonly Lazy<ManualLogSource> Log = new(() => Logger.CreateLogSource(typeof(OptionalLive).Assembly.GetName().Name ?? "Settings"));
 
     /// <summary>Whether a Toolkit is installed. Valid from the mod's Load on, since the Toolkit loads first.</summary>
@@ -54,6 +56,38 @@ internal static class OptionalLive
     // Kept in its own method so the Toolkit's types are only looked up when it is installed.
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void WatchWithToolkit(Action apply, ConfigEntryBase[] entries) => ExiledToolkit.LiveSettings.Watch(apply, entries);
+
+    /// <summary>
+    /// Whether the player is typing in a text box in any page or mod window, so the look-up key is text, not a hotkey.
+    /// Asked only on a press. Needs Toolkit 0.12.0 or newer; without it, or with an older one, the answer is no.
+    /// </summary>
+    public static bool IsTyping()
+    {
+        if (!_canAskTyping) return false;
+
+        if (!IsToolkitInstalled)
+        {
+            _canAskTyping = false;
+
+            return false;
+        }
+
+        try
+        {
+            return AskToolkitTyping();
+        }
+        catch (Exception ex) when (ex is TypeLoadException or MissingMemberException or FileNotFoundException or FileLoadException)
+        {
+            _canAskTyping = false;
+            Log.Value.LogWarning("Exiled's Toolkit is older than 0.12.0, so the look-up key also works while typing in a text box: " + ex.Message);
+
+            return false;
+        }
+    }
+
+    // Kept in its own method so the Toolkit's types are only looked up when it is installed.
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static bool AskToolkitTyping() => ExiledToolkit.Typing.IsActive;
 
     // Matches the Toolkit: a setting that fails to apply is logged and does not stop the mod's start.
     private static void ApplyOnce(Action apply)
