@@ -36,7 +36,7 @@ See [CONFIG.md](CONFIG.md).
 
 ## Troubleshooting
 
-The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.1.11 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
+The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.2.1 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
 
 ## Feedback
 
