@@ -68,7 +68,7 @@ internal static class InputGate
 
     private static bool SkipWhileBlocked() => !(_isBlockingHotkeys || Time.frameCount <= _blockedThroughFrame);
 
-    /// <summary>Fails soft: any error leaves the game's own answer standing.</summary>
+    /// <summary>Fails soft: any error leaves the game's answer standing.</summary>
     private static void RouteClicksToWindow(WebUILayer __instance, Vector2 screenPoint, Camera eventCamera, ref bool __result)
     {
         if (_isDragging)

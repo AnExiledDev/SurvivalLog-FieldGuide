@@ -5,11 +5,11 @@ public readonly record struct NormalRect(double X, double Y, double W, double H)
 {
     public static readonly NormalRect FullScreen = new(0, 0, 1, 1);
 
-    /// <summary>Left and top edges count, right and bottom do not, as in the game's own check.</summary>
+    /// <summary>Left and top edges count, right and bottom do not, as in the game's check.</summary>
     public bool Contains(double x, double y) => x >= X && x < X + W && y >= Y && y < Y + H;
 
     /// <summary>
-    /// A point in the web view's rect transform, as Unity gives it, mapped to page fractions with the game's own
+    /// A point in the web view's rect transform, as Unity gives it, mapped to page fractions with the game's
     /// formula (WebUIVm.IsPointInInteractiveArea): Unity's y grows upward, the page's grows downward.
     /// </summary>
     public bool ContainsLocalPoint(double localX, double localY, double width, double height, double pivotX, double pivotY)

@@ -6,7 +6,7 @@ using GameCore.HotUpdate.ReduxUI;
 namespace FieldGuide.Adapters;
 
 /// <summary>
-/// The mod's half that lives in the game's web UI: page.js, run in the root document the game's own pages sit in. It
+/// The mod's half that lives in the game's web UI: page.js, run in the root document the game's pages sit in. It
 /// draws the window, puts the Field Guide button in the HUD's tool column, adds the app to the phone and reads what the
 /// pointer is over. The web view can reload at any time and lose the script, so it is checked for every couple of
 /// seconds and put back when the page says it is missing.

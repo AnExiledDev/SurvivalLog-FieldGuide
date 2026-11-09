@@ -1,6 +1,6 @@
 // Field Guide's web half. Runs in Root.html, the document every game page iframe sits in. Draws a floating window
 // over all of them that shows the Survival Log Database and can be dragged by its title bar and resized from any edge
-// or corner, puts a button in the HUD's tool column built like the game's own buttons there, adds a Field Guide app to
+// or corner, puts a button in the HUD's tool column built like the game's buttons there, adds a Field Guide app to
 // the phone's home screen, and on the hotkey opens the page for whatever the pointer is over. Talks to the plugin
 // through vuplex.postMessage("slmod|fieldguide|<verb>") and is driven by window.__slfieldguide.
 (function () {
@@ -474,7 +474,7 @@
   }
 
   // A press on the title bar moves the window, on a grip resizes it. The shield covers the whole page until the
-  // button comes up, so the pointer can cross the game's own page frames without them taking the drag.
+  // button comes up, so the pointer can cross the game's page frames without them taking the drag.
   function onMouseDown(e) {
     e.stopPropagation();
 
@@ -897,7 +897,7 @@
     }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
   }
 
-  // First in the tool column: the column is anchored at the bottom, so the first child sits on top and the game's own
+  // First in the tool column: the column is anchored at the bottom, so the first child sits on top and the game's
   // buttons do not move. The column hides itself in build mode, and the button with it.
   function placeHudButton(doc, buildButton) {
     // Checked every page check, so a button still in the column it was put in costs no search.
@@ -995,7 +995,7 @@
 
   // ===== The phone app =====
 
-  // The app sits on the phone's home screen beside the game's own, and opens the site in the phone's own frame, where
+  // The app sits on the phone's home screen beside the game's, and opens the site in the phone's own frame, where
   // its narrow width gives the site's phone layout.
   var PHONE_CSS = [
     '.app.is-fg .app-icon{background:linear-gradient(180deg,#9fd77a,#3f7a2a)}',
