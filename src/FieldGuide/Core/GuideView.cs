@@ -1,3 +1,5 @@
+using ExiledToolkit.Web;
+
 namespace FieldGuide.Core;
 
 /// <summary>What the title bar's offline button says, and whether pressing it starts a download.</summary>

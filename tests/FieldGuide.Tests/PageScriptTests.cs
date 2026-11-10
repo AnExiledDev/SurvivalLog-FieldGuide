@@ -90,7 +90,7 @@ public class PageScriptTests
         Assert.Equal(1, page.Count("pageOf(/CoreUI1/).querySelectorAll('.fg-hud-btn')"));
     }
 
-    // The page check runs every 400 ms on every HUD page, so a button already in place must cost no search.
+    // Exiled's Toolkit checks every HUD page four times a second, so a button already in place must cost no search.
     [Fact]
     public void A_placed_hud_button_costs_the_page_check_no_search()
     {
@@ -117,6 +117,72 @@ public class PageScriptTests
 
         Assert.Equal(1, page.Count("hud.querySelectorAll('.fg-hud-btn')"));
         Assert.True(page.Is("hud.querySelector('.fg-hud-btn').parentNode === column"));
+    }
+
+    // ===== Load order (Exiled's Toolkit) =====
+
+    // The game may run Field Guide's script before the Toolkit's. Until the Toolkit is there, nothing is placed and
+    // nothing is said; once it loads, the script starts and tells the plugin it is ready.
+    [Fact]
+    public void Before_the_toolkit_loads_the_script_waits_and_then_starts_with_it()
+    {
+        var page = new PageScript(isToolkitFirst: false);
+
+        page.Run("openHud()");
+        page.Poll();
+
+        Assert.False(page.HasSaidReady);
+        Assert.False(page.Is("hudButton()"));
+
+        page.LoadToolkit();
+        page.Poll();
+
+        Assert.True(page.HasSaidReady);
+        Assert.Equal(1, page.Count("pageOf(/CoreUI1/).querySelectorAll('.fg-hud-btn')"));
+        Assert.Contains("HUD button placed in the tool column", page.Notes);
+    }
+
+    [Fact]
+    public void With_the_toolkit_first_the_script_says_it_is_ready_at_once()
+    {
+        var page = new PageScript();
+
+        Assert.True(page.HasSaidReady);
+    }
+
+    [Fact]
+    public void A_window_opened_before_the_toolkit_loads_gets_its_look_and_its_size_once_it_does()
+    {
+        var page = new PageScript(isToolkitFirst: false);
+
+        page.Setup(ViewOf(Online));
+        page.Toggle();
+
+        Assert.False(page.Is("document.getElementById('fg-style')"));
+        Assert.False(page.Is("window.__exiledUiWait"));
+
+        page.LoadToolkit();
+
+        Assert.True(page.Is("document.getElementById('fg-style')"));
+        Assert.Equal("1", page.Text("window.__exiledUiWait.length"));
+        Assert.True(page.Is("window.__exiledUiWait[0][0] === guideWindow()"));
+    }
+
+    [Fact]
+    public void A_phone_opened_before_the_toolkit_loads_gets_the_app_once_it_does()
+    {
+        var page = new PageScript(isToolkitFirst: false);
+
+        page.Setup(ViewOf(Online));
+        page.Run("openPhone()");
+        page.Poll();
+
+        Assert.Equal(0, page.Count("phonePage().querySelectorAll('.fg-app')"));
+
+        page.LoadToolkit();
+        page.Poll();
+
+        Assert.Equal(1, page.Count("phonePage().querySelectorAll('.fg-app')"));
     }
 
     [Fact]

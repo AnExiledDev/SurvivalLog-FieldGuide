@@ -1,15 +1,17 @@
 // Field Guide's web half. Runs in Root.html, the document every game page iframe sits in. Draws a floating window
 // over all of them that shows the Survival Log Database and can be dragged by its title bar and resized from any edge
 // or corner, puts a button in the HUD's tool column built like the game's buttons there, adds a Field Guide app to
-// the phone's home screen, and on the hotkey opens the page for whatever the pointer is over. Talks to the plugin
-// through vuplex.postMessage("slmod|fieldguide|<verb>") and is driven by window.__slfieldguide.
+// the phone's home screen, and on the hotkey opens the page for whatever the pointer is over. Exiled's Toolkit's page
+// API (window.ExiledToolkit, through its ready queue) places the HUD button, watches the game's pages, sends the
+// messages to the plugin ("slmod|fieldguide|<verb>"), adds the styles and draws the window at the UI size. The script
+// is driven by window.__slfieldguide.
 (function () {
   if (window.__slfieldguide) return;
 
   var PREFIX = 'slmod|fieldguide|';
-  var HUD_CLASS = 'fg-hud-btn';
+  var HUD_ID = 'fg-hud-btn';
   // The guide's place in the HUD's tool column when Exiled's Toolkit lays it out in columns of four.
-  var DOCK_ORDER = '21';
+  var DOCK_ORDER = 21;
   var PHONE_APP_CLASS = 'fg-app';
   var PHONE_VIEW_CLASS = 'fg-phone';
   var PHONE_STYLE_ID = 'fg-phone-style';
@@ -41,7 +43,8 @@
   var BAR_PX = 22;
   // The site names the page it is on in a message to the game's root page (src/designs/depot/Frame.astro).
   var SITE_AT = 'slfg-at|';
-  // The plugin hands over the words in the game's language before every call (Texts.cs); English stands in until then.
+  // The plugin hands over the words in the game's language (Texts.cs) before its first call and whenever the language
+  // changes; English stands in until then.
   var ENGLISH = {
     title: 'Field Guide', tip: 'The Survival Log Database. Hover an item or a map location and press {0} to look it up',
     tipNoKey: 'The Survival Log Database',
@@ -64,6 +67,9 @@
   var hasReportedPageAccess = false;
   var hasReportedHudPlaced = false;
   var hasReportedPhonePlaced = false;
+  // Exiled's Toolkit's page API and the HUD button it placed, once its script has run.
+  var etk = null;
+  var hud = null;
 
   function say(key) {
     var words = window.__slfieldguideWords || ENGLISH;
@@ -75,9 +81,7 @@
   }
 
   function send(message) {
-    try {
-      if (window.vuplex) window.vuplex.postMessage(PREFIX + message);
-    } catch (e) {}
+    if (etk) etk.send(PREFIX, message);
   }
 
   function make(doc, tag, className, text) {
@@ -226,8 +230,6 @@
 
     document.body.appendChild(root);
     document.body.appendChild(shield);
-    // The window is as big as the player made it, so it is never shrunk; each new size places it again.
-    uiSize(root, { fit: false, onZoom: onZoom });
 
     root.addEventListener('click', onClick);
     root.addEventListener('mousedown', onMouseDown);
@@ -236,22 +238,14 @@
 
     ui = { root: root, bar: bar, body: body, frame: frame, shield: shield };
     path = null;
+    sizeWindow();
   }
 
-  // Hands a panel to Exiled's Toolkit to be drawn at the player's UI size. Before the Toolkit's script has loaded it
-  // waits in a list the Toolkit reads; without the Toolkit nothing happens.
-  function uiSize(node, options) {
-    options = Object.assign({ mod: 'FieldGuide' }, options);
-    var toolkit = window.ExiledUi;
-
-    if (toolkit) {
-      toolkit.size(node, options);
-      return;
-    }
-
-    var waiting = window.__exiledUiWait = window.__exiledUiWait || [];
-    waiting.push([node, options]);
-    if (waiting.length > 32) waiting.shift();
+  // Hands the window to Exiled's Toolkit to be drawn at the player's UI size. The window is as big as the player made
+  // it, so it is never shrunk; each new size places it again. A window built before the Toolkit's script ran is
+  // handed over when it runs.
+  function sizeWindow() {
+    if (etk && ui) etk.size(ui.root, { mod: 'FieldGuide', fit: false, onZoom: onZoom });
   }
 
   // The UI size the Toolkit draws the window at. Every length inside the window is multiplied by it, its place on
@@ -275,15 +269,9 @@
     return node;
   }
 
-  // The style outlives a lost window, so a rebuild must not stack another copy of it.
+  // The style outlives a lost window; the Toolkit keeps one copy per id, so a rebuild does not stack another.
   function addStyle() {
-    if (document.getElementById('fg-style')) return;
-
-    var style = make(document, 'style');
-
-    style.id = 'fg-style';
-    style.textContent = CSS;
-    document.head.appendChild(style);
+    if (etk) etk.addStyle(document, 'fg-style', CSS);
   }
 
   function render() {
@@ -546,6 +534,7 @@
 
     if (ui && path && next.base && next.base !== hadBase) navigate(path);
 
+    showHudWords();
     refreshPhone();
   }
 
@@ -835,38 +824,35 @@
     return docs;
   }
 
-  var PAGES = [
-    { pattern: /CoreUI0\.html/, patch: function (doc) { placeHudButton(doc, prepHudButton); } },
-    { pattern: /CoreUI1\.html/, patch: function (doc) { placeHudButton(doc, hudButton); } },
-    { pattern: /ExploreMap\.html|PreDisasterMap\.html/, patch: watchMarkers },
-    { pattern: /PhoneSMS\.html/, patch: patchPhone },
-    { pattern: /Codex\.html/, patch: watchEntries },
-    { pattern: /\.html/, patch: watchItems }
-  ];
+  // The game creates and drops its page iframes whenever it likes; Exiled's Toolkit checks for them (see start).
+  function watchGamePages() {
+    etk.watchPages(/ExploreMap\.html|PreDisasterMap\.html/, watchMarkers);
+    etk.watchPages(PHONE_PAGE, patchPhone, { everyCheck: true });
+    etk.watchPages(/Codex\.html/, watchEntries);
+    etk.watchPages(/\.html/, function (doc, frame) {
+      if (ui && frame === ui.frame) return;
 
-  // Polled because the game creates and drops its page iframes whenever it likes.
-  function patchPages() {
-    var docs = gameDocs();
-
-    hearGame();
-
-    var isPhoneShown = false;
-
-    docs.forEach(function (page) {
-      PAGES.forEach(function (entry) {
-        if (entry.pattern.test(page.src)) entry.patch(page.doc);
-      });
-
-      // Only asked while the app is open, so a closed app costs no search of the phone page.
-      if (phone.screen && !isPhoneShown && /PhoneSMS\.html/.test(page.src) && page.frame.style.display !== 'none' && page.doc.querySelector('.' + PHONE_VIEW_CLASS)) isPhoneShown = true;
+      watchItems(doc);
     });
-
-    if (phone.screen && !isPhoneShown) phoneClosed();
   }
 
-  function patchPagesSafely() {
+  // The Toolkit's page check only adds things to pages. This check notices when the game takes the phone away with
+  // the app still open. Only asked while the app is open, so a closed app costs no search of the phone page.
+  function checkPhone() {
+    hearGame();
+
+    if (!phone.screen) return;
+
+    var isPhoneShown = gameDocs().some(function (page) {
+      return PHONE_PAGE.test(page.src) && page.frame.style.display !== 'none' && !!page.doc.querySelector('.' + PHONE_VIEW_CLASS);
+    });
+
+    if (!isPhoneShown) phoneClosed();
+  }
+
+  function checkPhoneSafely() {
     try {
-      patchPages();
+      checkPhone();
     } catch (e) {}
   }
 
@@ -962,54 +948,19 @@
     }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
   }
 
-  // First in the tool column: the column is anchored at the bottom, so the first child sits on top and the game's
-  // buttons do not move. The column hides itself in build mode, and the button with it.
-  function placeHudButton(doc, buildButton) {
-    // Checked every page check, so a button still in the column it was put in costs no search.
-    var placed = doc.fgHudButton;
-
-    if (placed && placed.isConnected === true && placed.parentNode === doc.fgHudColumn) {
-      if (doc.fgTipKey !== view.hotkey) showTipKey(doc);
-
-      return;
-    }
-
-    var column = doc.querySelector('.vertical-tools');
-    var existing = doc.querySelector('.' + HUD_CLASS);
-
-    if (!column) return;
-
-    if (existing && existing.parentNode === column) {
-      doc.fgHudButton = existing;
-      doc.fgHudColumn = column;
-      return;
-    }
-
-    if (existing) existing.remove();
-
-    var node = buildButton(doc);
-
-    node.setAttribute('data-etk-dock', DOCK_ORDER);
-    column.insertBefore(node, column.firstChild);
-    doc.fgHudButton = node;
-    doc.fgHudColumn = column;
-
-    if (!hasReportedHudPlaced) send('diag|HUD button placed in the tool column');
-    hasReportedHudPlaced = true;
-  }
-
-  // The same markup as CoreUI1's bag button: its classes, an svg icon, and the hover tip its stylesheet shows. Every
-  // game page watches its body for new buttons and tells the game where they are, so a click on this one reaches it.
-  function hudButton(doc) {
-    var node = toggleButton(doc, 'ui-btn icon-sq interactive-btn has-entry-tip ' + HUD_CLASS);
-    var tip = make(doc, 'div', 'entry-tip');
-
-    tip.appendChild(make(doc, 'div', 'entry-tip-title', say('title')));
-    doc.fgTipBody = tip.appendChild(make(doc, 'div', 'entry-tip-body', tipText()));
-    doc.fgTipKey = view.hotkey;
-    node.appendChild(tip);
-
-    return node;
+  // The HUD button, placed by Exiled's Toolkit first in the tool column of the HUD (CoreUI1) and of the HUD before the
+  // disaster (CoreUI0), built like the game's buttons there. The column hides itself in build mode, and the
+  // button with it.
+  function addHudButton() {
+    hud = etk.addHudButton({
+      id: HUD_ID, order: DOCK_ORDER, icon: BOOK_FILL, evenOdd: true, title: say('title'), tip: tipText(),
+      pages: /CoreUI[01]\.html/,
+      onClick: function () { send('toggle'); },
+      onPlace: function () {
+        if (!hasReportedHudPlaced) send('diag|HUD button placed in the tool column');
+        hasReportedHudPlaced = true;
+      }
+    });
   }
 
   // The tip names the look-up key, or leaves it out when no key is set.
@@ -1017,45 +968,9 @@
     return view.hotkey ? say('tip', view.hotkey) : say('tipNoKey');
   }
 
-  // A key changed in game reaches a button already in place at the next page check.
-  function showTipKey(doc) {
-    doc.fgTipKey = view.hotkey;
-
-    if (doc.fgTipBody) doc.fgTipBody.textContent = tipText();
-  }
-
-  // CoreUI0's tool buttons sit in a wrapper with their hover tip beside them, to the right.
-  function prepHudButton(doc) {
-    var wrapper = make(doc, 'div', 'tooltip-wrapper ' + HUD_CLASS);
-    var tip = make(doc, 'div', 'btn-tooltip btn-tooltip--right');
-
-    tip.appendChild(make(doc, 'div', 'tip-name', say('title')));
-    doc.fgTipBody = tip.appendChild(make(doc, 'div', 'tip-desc', tipText()));
-    doc.fgTipKey = view.hotkey;
-    wrapper.appendChild(toggleButton(doc, 'ui-btn icon-sq interactive-btn'));
-    wrapper.appendChild(tip);
-
-    return wrapper;
-  }
-
-  function toggleButton(doc, className) {
-    var node = make(doc, 'button', className);
-    var svg = doc.createElementNS(SVG_NS, 'svg');
-    var book = doc.createElementNS(SVG_NS, 'path');
-
-    svg.setAttribute('class', 'icon-svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    book.setAttribute('d', BOOK_FILL);
-    book.setAttribute('fill-rule', 'evenodd');
-    svg.appendChild(book);
-    node.setAttribute('data-interactive', '');
-    node.appendChild(svg);
-    node.addEventListener('click', function (e) {
-      e.stopPropagation();
-      send('toggle');
-    });
-
-    return node;
+  // A key or language changed in game reaches a button already in place at once.
+  function showHudWords() {
+    if (hud) hud.update({ title: say('title'), tip: tipText() });
   }
 
   // ===== The phone app =====
@@ -1086,7 +1001,7 @@
   }
 
   function patchPhone(doc) {
-    if (hasPhoneApp(doc)) return;
+    if (!etk || hasPhoneApp(doc)) return;
 
     // Look for an app anywhere on the page, not only in the grid, in case one went in before this page was known.
     var found = doc.querySelector('.' + PHONE_APP_CLASS);
@@ -1100,28 +1015,18 @@
 
     if (!grid) return;
 
-    addPhoneStyle(doc);
+    etk.addStyle(doc, PHONE_STYLE_ID, PHONE_CSS);
     doc.fgPhoneApp = grid.appendChild(phoneApp(doc));
 
     if (!hasReportedPhonePlaced) send('diag|app placed on the phone');
     hasReportedPhonePlaced = true;
   }
 
-  function addPhoneStyle(doc) {
-    if (doc.getElementById(PHONE_STYLE_ID)) return;
-
-    var style = doc.createElement('style');
-
-    style.id = PHONE_STYLE_ID;
-    style.textContent = PHONE_CSS;
-    (doc.head || doc.body).appendChild(style);
-  }
-
   // The markup of the phone's own apps: an icon square with a stroked glyph, and the label under it.
   function phoneApp(doc) {
     var app = make(doc, 'div', 'app is-fg ' + PHONE_APP_CLASS);
 
-    // Exiled's Toolkit puts marked apps in the phone's dock, lowest number first; without it this does nothing.
+    // Exiled's Toolkit puts marked apps in the phone's dock, lowest number first.
     app.setAttribute('data-etk-phone', '10');
     var icon = make(doc, 'div', 'app-icon');
     var glyph = make(doc, 'div', 'icon-glyph');
@@ -1278,8 +1183,23 @@
 
   // ===== Start =====
 
+  // Exiled's Toolkit may load before or after this script. Its ready list runs start as soon as the Toolkit is there.
+  function start(api) {
+    etk = api;
+
+    // A window opened before the Toolkit loaded gets its look and its size now.
+    if (ui) {
+      addStyle();
+      sizeWindow();
+    }
+
+    addHudButton();
+    watchGamePages();
+    send('ready');
+  }
+
   watchFrames();
-  setInterval(patchPagesSafely, 400);
+  setInterval(checkPhoneSafely, 400);
   window.addEventListener('message', onSiteMessage);
   // The plugin forgets the window's place, and a drag, if it stops hearing about them.
   setInterval(function () {
@@ -1289,5 +1209,5 @@
 
   // show and codexPage are for other mods too: Checklist links a Codex entry to its page with them.
   window.__slfieldguide = { setup: setup, toggle: toggle, lookup: lookup, close: close, show: show, codexPage: codexPage, codexItems: setCodexItems };
-  send('ready');
+  (window.ExiledToolkitReady = window.ExiledToolkitReady || []).push(start);
 })();

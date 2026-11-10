@@ -4,23 +4,42 @@ using Jint;
 namespace FieldGuide.Tests;
 
 /// <summary>
-/// page.js exactly as the plugin embeds it, run in Jint on top of FakePage.js (Root.html, the HUD, the phone, the game
-/// pages and the vuplex bridge). The calls into the script are the ones WebPage makes, and what the script posts is
-/// parsed with the real PageCommand, so a test sees the commands the plugin would act on.
+/// page.js exactly as the plugin embeds it, run in Jint with Exiled's Toolkit's page API (api.js, from the Toolkit's
+/// source) on top of FakePage.js (Root.html, the HUD, the phone, the game pages and the vuplex bridge). The calls into
+/// the script are the ones WebPage makes, and what the script posts is parsed with the real PageCommand, so a test sees
+/// the commands the plugin would act on.
 /// </summary>
 internal sealed class PageScript
 {
+    private const string DiagPrefix = PageCommand.Prefix + "diag|";
+
     private readonly Engine _engine = new();
 
-    public PageScript()
+    /// <param name="isToolkitFirst">
+    /// The game runs the Toolkit's script first, or with false Field Guide's first; then the Toolkit's runs only at
+    /// <see cref="LoadToolkit"/>.
+    /// </param>
+    public PageScript(bool isToolkitFirst = true)
     {
         _engine.Execute(Resource("FieldGuide.Tests.FakePage.js"));
+
+        if (isToolkitFirst) _engine.Execute(Resource("ExiledToolkit.api.js"));
+
         _engine.Execute(Resource("FieldGuide.page.js"));
         Hear();
     }
 
     /// <summary>Every command the script sent the plugin, its ready message and diag notes aside.</summary>
     public List<PageCommand> Sent { get; } = new();
+
+    /// <summary>The script's "diag|" notes, as the plugin logs them.</summary>
+    public List<string> Notes { get; } = new();
+
+    /// <summary>Whether the script told the plugin it is ready, which has the plugin send it everything again.</summary>
+    public bool HasSaidReady { get; private set; }
+
+    /// <summary>The Toolkit's page API arriving after Field Guide's script.</summary>
+    public void LoadToolkit() => Run(Resource("ExiledToolkit.api.js"));
 
     public void Run(string statements)
     {
@@ -34,7 +53,7 @@ internal sealed class PageScript
 
     public int Count(string expression) => (int)_engine.Evaluate($"({expression}).length").AsNumber();
 
-    /// <summary>One run of the script's 400 ms page check and its one-second report.</summary>
+    /// <summary>One run of the Toolkit's 250 ms page check, the script's 400 ms phone check and its one-second report.</summary>
     public void Poll() => Run("poll()");
 
     public void Click(string expression) => Run($"click({expression})");
@@ -57,9 +76,13 @@ internal sealed class PageScript
 
         _engine.Execute("posted.length = 0");
 
-        foreach (var command in messages.Select(PageCommand.Parse))
+        foreach (var message in messages)
         {
-            if (command is not (PageCommand.Ready or PageCommand.Unknown)) Sent.Add(command);
+            var command = PageCommand.Parse(message);
+
+            if (command is PageCommand.Ready) HasSaidReady = true;
+            else if (message.StartsWith(DiagPrefix, StringComparison.Ordinal)) Notes.Add(message.Substring(DiagPrefix.Length));
+            else if (command is not PageCommand.Unknown) Sent.Add(command);
         }
     }
 

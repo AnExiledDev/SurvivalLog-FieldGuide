@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ExiledToolkit.Game;
 using FieldGuide.Core;
 using GameCore.HotUpdate;
 using GameList = Il2CppSystem.Collections.Generic.List<int>;

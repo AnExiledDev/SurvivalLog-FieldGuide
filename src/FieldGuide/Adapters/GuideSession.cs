@@ -1,4 +1,7 @@
 using System;
+using ExiledToolkit;
+using ExiledToolkit.Game;
+using ExiledToolkit.Web;
 using FieldGuide.Core;
 using UnityEngine;
 
@@ -12,8 +15,10 @@ internal sealed class GuideSession
 {
     private const float ViewCheckSeconds = 0.25f;
     private const string DiagPrefix = PageCommand.Prefix + "diag|";
+    private const string HotkeyHolder = "FieldGuide.window";
 
     private readonly WebPage _page;
+    private readonly PageMailbox _mailbox;
     private readonly OfflineCopy _offline;
     private readonly LocalServer _server;
     private readonly GuideSettings _settings;
@@ -28,11 +33,12 @@ internal sealed class GuideSession
     private bool _isPhoneOpen;
     private bool _isHoldingKeyboard;
     private readonly Func<bool> _isHotkeyDown;
-    private static readonly Func<bool> IsTyping = OptionalLive.IsTyping;
+    private static readonly Func<bool> IsTyping = () => Typing.IsActive;
 
-    public GuideSession(WebPage page, OfflineCopy offline, LocalServer server, GuideSettings settings, Action<string> log)
+    public GuideSession(WebPage page, PageMailbox mailbox, OfflineCopy offline, LocalServer server, GuideSettings settings, Action<string> log)
     {
         _page = page;
+        _mailbox = mailbox;
         _offline = offline;
         _server = server;
         _settings = settings;
@@ -48,13 +54,13 @@ internal sealed class GuideSession
 
         _page.KeepInstalled(now);
 
-        while (PageMessages.TryTake(out var command)) Handle(command, now);
+        while (_mailbox.TryTake(out var message)) Handle(PageCommand.Parse(message), now);
 
         InputGate.SetDragging(isDragging);
         InputGate.SetArea(_area.At(now));
         HoldKeyboard(InputGate.IsPointerOver || _isPhoneOpen || isDragging);
 
-        if (!_isHoldingKeyboard && Hotkey.Fires(_settings.Hotkey != KeyCode.None, _isHotkeyDown, IsTyping)) _page.Lookup(GameLanguage.IsChinese());
+        if (!_isHoldingKeyboard && ExiledToolkit.Kit.Hotkey.Fires(_settings.Hotkey != KeyCode.None, _isHotkeyDown, IsTyping)) _page.Call("lookup()");
 
         SendViewIfChanged(now);
     }
@@ -66,6 +72,7 @@ internal sealed class GuideSession
             case PageCommand.Ready:
                 _sentView = null;
                 _hasSentCodex = false;
+                _page.ForgetWords();
                 _isPhoneOpen = false;
                 _log("page script ready");
                 break;
@@ -74,7 +81,7 @@ internal sealed class GuideSession
                 _page.Install();
                 break;
             case PageCommand.Toggle:
-                _page.Toggle(GameLanguage.IsChinese());
+                _page.Call("toggle()");
                 break;
             case PageCommand.Shown shown:
                 _area.Heard(shown.Area, now);
@@ -122,7 +129,8 @@ internal sealed class GuideSession
         if (wantsKeyboard) _keyboard.Claim();
         else _keyboard.Release();
 
-        InputGate.BlockHotkeys(wantsKeyboard);
+        if (wantsKeyboard) HotkeyGate.Hold(HotkeyHolder);
+        else HotkeyGate.Release(HotkeyHolder);
     }
 
     private void SendViewIfChanged(float now)
@@ -136,7 +144,7 @@ internal sealed class GuideSession
         var view = GuideView.Json(SiteBase(), isChinese, _settings.Layout, _settings.TextSize, _offline.State, _settings.HotkeyName);
 
         if (view == _sentView) return;
-        if (_page.Setup(view, isChinese)) _sentView = view;
+        if (_page.Call($"setup({view})")) _sentView = view;
     }
 
     /// <summary>Once per page script, as soon as the game has loaded its tables.</summary>
@@ -146,7 +154,7 @@ internal sealed class GuideSession
 
         var json = _codex.Json();
 
-        if (json != null && _page.CodexItems(json, GameLanguage.IsChinese())) _hasSentCodex = true;
+        if (json != null && _page.Call($"codexItems({json})")) _hasSentCodex = true;
     }
 
     private string? SiteBase()
