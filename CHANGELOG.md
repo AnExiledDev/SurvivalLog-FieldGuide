@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- New: `/` over an entry in the Survival Codex opens its page: the item for Food, Prey, Dish, Plant, Craft and Decor entries, the furniture for Furniture entries. Over the panel on the right it opens the selected entry. For dishes, plants, crafts and decor, the item is read from the game's data.
+- Other mods can open a page in the Field Guide window. Checklist uses this for its `Open in Field Guide` link.
+- Made for Survival Log 1.1.20719.
+
 ## 0.2.1
 
 - The `/` key no longer looks things up while you type in a text box in any mod's window. Needs Exiled's Toolkit 0.12.0 or newer; without it the key works as before.

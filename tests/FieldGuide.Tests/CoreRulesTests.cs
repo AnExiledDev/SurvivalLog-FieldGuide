@@ -301,3 +301,18 @@ public class HttpBitsTests
         Assert.Equal("application/wasm", HttpBits.ContentType("pagefind/pagefind.wasm"));
     }
 }
+
+public class CodexPagesTests
+{
+    [Fact]
+    public void Each_tab_maps_its_entries_to_their_items_and_entries_with_no_item_are_left_out()
+    {
+        var json = CodexPages.Json(new Dictionary<int, IReadOnlyDictionary<int, int>>
+        {
+            [CodexPages.Dish] = new Dictionary<int, int> { [300] = 4100, [301] = 0 },
+            [CodexPages.Decor] = new Dictionary<int, int> { [7] = 5200 },
+        });
+
+        Assert.Equal("{\"1\":{\"300\":4100},\"6\":{\"7\":5200}}", json);
+    }
+}

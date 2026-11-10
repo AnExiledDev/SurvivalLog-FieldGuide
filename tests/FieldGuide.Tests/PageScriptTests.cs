@@ -639,6 +639,90 @@ public class PageScriptTests
         Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
     }
 
+    // The Codex tabs, by index: 0 Food, 1 Dish, 2 Plant, 3 Prey, 4 Craft, 5 Furniture, 6 Decor.
+    private static PageScript CodexOpen(int tab, string entries, string selected = "null")
+    {
+        var page = Ready();
+
+        page.Run($"var codex = codexPage({tab}, {entries}, {selected})");
+        page.Poll();
+
+        return page;
+    }
+
+    [Theory]
+    [InlineData(0, "item=2001")]
+    [InlineData(3, "item=2001")]
+    [InlineData(5, "furniture=2001")]
+    public void The_hotkey_over_a_codex_entry_opens_the_item_or_furniture_it_is(int tab, string query)
+    {
+        var page = CodexOpen(tab, "[{ sourceId: 1500 }, { sourceId: 2001 }]");
+
+        page.Run("fire('mouseover', codexEntry(codex, 1))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/go/?" + query), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_dish_entry_opens_the_item_the_plugin_says_the_recipe_makes()
+    {
+        var page = CodexOpen(1, "[{ sourceId: 300 }, { sourceId: 301 }]");
+
+        page.Run("window.__slfieldguide.codexItems({ 1: { 300: 4100, 301: 4105 } })");
+        page.Run("fire('mouseover', codexEntry(codex, 1))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/go/?item=4105"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_dish_entry_before_the_plugin_sent_its_items_toggles_the_window_like_any_unknown_hover()
+    {
+        var page = CodexOpen(1, "[{ sourceId: 300 }]");
+
+        page.Run("fire('mouseover', codexEntry(codex, 0))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void Over_the_right_hand_panel_the_hotkey_opens_the_selected_entry()
+    {
+        var page = CodexOpen(2, "[{ sourceId: 10 }, { sourceId: 11 }]", "{ sourceId: 11 }");
+
+        page.Run("window.__slfieldguide.codexItems({ 2: { 10: 3001, 11: 3002 } })");
+        page.Run("fire('mouseover', codex.querySelector('.detail-name'))");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/go/?item=3002"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void A_codex_entry_stops_counting_once_the_codex_is_hidden()
+    {
+        var page = CodexOpen(0, "[{ sourceId: 2001 }]");
+
+        page.Run("fire('mouseover', codexEntry(codex, 0))");
+        page.Run("document.querySelectorAll('iframe').filter(function (f) { return /Codex/.test(f.src); })[0].style.display = 'none'");
+        page.Lookup();
+
+        Assert.Equal(InWindow("/en/"), page.Text("guideFrame().src"));
+    }
+
+    [Fact]
+    public void Another_mod_can_open_a_codex_entry_page_through_the_script()
+    {
+        var page = Ready();
+
+        page.Run("window.__slfieldguide.codexItems({ 6: { 7: 5200 } })");
+        page.Run("var hit = window.__slfieldguide.codexPage(6, 7); window.__slfieldguide.show(hit.kind, hit.id)");
+
+        Assert.Equal(InWindow("/en/go/?item=5200"), page.Text("guideFrame().src"));
+        Assert.True(page.Is("window.__slfieldguide.codexPage(6, 8) === null"));
+    }
+
     [Fact]
     public void A_hidden_backpack_tooltip_is_not_a_hover()
     {

@@ -4,7 +4,7 @@ A BepInEx mod for Survival Log. Read the [Survival Log Database](https://sldb.co
 
 ## What it does
 
-- **Look things up with `/`:** hover an item in your backpack, on a trader's shelf or in a workbench (brewer, cooker, freezer and the rest), or a location on the map, and press `/` to open its page. Over nothing, `/` opens or closes the window.
+- **Look things up with `/`:** hover an item in your backpack, on a trader's shelf or in a workbench (brewer, cooker, freezer and the rest), a location on the map, or an entry in the Survival Codex, and press `/` to open its page. In the Codex, over the panel on the right, `/` opens the selected entry. Over nothing, `/` opens or closes the window.
 - **A window you place yourself:** drag it by its title bar and resize it from any edge or corner. It opens where you left it, at the size you left it. `A-` and `A+` on the title bar make the text smaller or larger. The buttons at the top right minimize it to its title bar, maximize it to fill the screen, or close it.
 - **UI size**: with Exiled's Toolkit 0.10.0 or newer, its UI size setting (`UiScale`) draws what is in the window bigger or smaller. The window keeps the place and size you gave it. The book button and the phone app keep the game's size. With Toolkit 0.11.0 or newer, Field Guide's own `UiScale` under Interface sets a size for this mod alone; at 0, the default, it follows the Toolkit's.
 - **Book button on the HUD:** a book button in the bottom-left tool column opens and closes the window.
@@ -16,10 +16,11 @@ While the pointer is over the window or the phone app is open, typing goes to th
 
 ## Requirements
 
-- Survival Log 1.1.20151. Built for this version; a game update can break it until the mod is updated.
+- Survival Log 1.1.20719. Built for this version; a game update can break it until the mod is updated.
 - [BepInEx for Survival Log](https://www.nexusmods.com/survivallog/mods/12). Install it first.
 - An internet connection to read the site online or to download the offline copy.
 - Optional: [Exiled's Toolkit](https://github.com/AnExiledDev/SurvivalLog-ExiledToolkit) 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps; without it, it shows in the middle of the phone's home screen. With 0.10.0 or newer, its UI size setting also sizes what is in the window. With 0.12.0 or newer, the `/` key does nothing while you type in a text box in any mod's window.
+- Optional: Checklist. Its list of how to get a locked Codex entry ends with an `Open in Field Guide` link.
 - Optional: [Mod Manager](https://www.nexusmods.com/survivallog/mods/73). With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.
 
 ## Install
@@ -37,7 +38,7 @@ See [CONFIG.md](CONFIG.md).
 
 ## Troubleshooting
 
-The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.2.1 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
+The mod writes `BepInEx\field-guide.log`. A working install logs `===== Field Guide 0.3.0 started` when the game starts. If the book button never shows, check that line and look for errors in `BepInEx\LogOutput.log`. A failed download says why in the same log; press the button again to retry.
 
 ## Feedback
 

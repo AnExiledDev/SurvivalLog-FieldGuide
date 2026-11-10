@@ -20,6 +20,8 @@ internal sealed class GuideSession
     private readonly Action<string> _log;
     private readonly ClickArea _area = new();
     private readonly WebKeyboard _keyboard = new();
+    private readonly CodexItems _codex;
+    private bool _hasSentCodex;
     private string? _sentView;
     private float _nextViewCheckAt;
     private float _dragHeardAt = float.NegativeInfinity;
@@ -36,6 +38,7 @@ internal sealed class GuideSession
         _settings = settings;
         _log = log;
         _isHotkeyDown = () => Input.GetKeyDown(_settings.Hotkey);
+        _codex = new CodexItems(log);
     }
 
     public void Update()
@@ -62,6 +65,7 @@ internal sealed class GuideSession
         {
             case PageCommand.Ready:
                 _sentView = null;
+                _hasSentCodex = false;
                 _isPhoneOpen = false;
                 _log("page script ready");
                 break;
@@ -126,12 +130,23 @@ internal sealed class GuideSession
         if (now < _nextViewCheckAt) return;
 
         _nextViewCheckAt = now + ViewCheckSeconds;
+        SendCodexIfDue();
 
         var isChinese = GameLanguage.IsChinese();
         var view = GuideView.Json(SiteBase(), isChinese, _settings.Layout, _settings.TextSize, _offline.State, _settings.HotkeyName);
 
         if (view == _sentView) return;
         if (_page.Setup(view, isChinese)) _sentView = view;
+    }
+
+    /// <summary>Once per page script, as soon as the game has loaded its tables.</summary>
+    private void SendCodexIfDue()
+    {
+        if (_hasSentCodex) return;
+
+        var json = _codex.Json();
+
+        if (json != null && _page.CodexItems(json, GameLanguage.IsChinese())) _hasSentCodex = true;
     }
 
     private string? SiteBase()

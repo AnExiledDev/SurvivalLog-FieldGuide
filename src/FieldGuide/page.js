@@ -559,7 +559,12 @@
       return;
     }
 
-    open('/' + view.lang + '/go/?' + hit.kind + '=' + hit.id);
+    show(hit.kind, hit.id);
+  }
+
+  // Opens the page for a game id: an item, furniture or place, as the site's go page takes them.
+  function show(kind, id) {
+    open('/' + view.lang + '/go/?' + encodeURIComponent(kind) + '=' + encodeURIComponent(id));
   }
 
   // ===== What the pointer is over =====
@@ -712,6 +717,64 @@
     });
   }
 
+  // ===== The Survival Codex =====
+
+  // The Codex's tabs: Food, Dish, Plant, Prey, Craft, Furniture, Decor. Food and Prey entries are items and Furniture
+  // entries furniture; the others are named by a recipe, plant or style id, and the plugin sends the item behind each.
+  var CODEX_KINDS = ['item', null, null, 'item', null, 'furniture', null];
+  var codexItems = {};
+
+  function setCodexItems(maps) {
+    codexItems = maps && typeof maps === 'object' ? maps : {};
+  }
+
+  // The page for one Codex entry, or null when the site has none for it.
+  function codexPage(tab, sourceId) {
+    var kind = CODEX_KINDS[tab];
+
+    if (kind) return sourceId > 0 ? { kind: kind, id: sourceId } : null;
+
+    var item = codexItems[tab] ? codexItems[tab][sourceId] : null;
+
+    return item > 0 ? { kind: 'item', id: item } : null;
+  }
+
+  // The grid draws one .entry per element of filteredEntries, in order. Over the right-hand panel the entry is the
+  // selected one.
+  function watchEntries(doc) {
+    if (doc.__fgEntriesWatched) return;
+
+    doc.__fgEntriesWatched = true;
+    doc.__fgEntry = null;
+    doc.addEventListener('mouseover', function (e) {
+      var target = e.target && e.target.closest ? e.target : null;
+
+      doc.__fgEntry = target ? target.closest('.entry') || (target.closest('.col-right') ? 'selected' : null) : null;
+    });
+    doc.addEventListener('mouseout', function (e) {
+      if (!e.relatedTarget) doc.__fgEntry = null;
+    });
+  }
+
+  function codexHit(doc, frame) {
+    var over = doc.__fgEntry;
+    var state = over ? vueSetup(doc) : null;
+
+    if (!state || !state.state || (frame && frame.style.display === 'none')) return null;
+
+    var entry = null;
+
+    if (over === 'selected') {
+      entry = state.selectedEntry;
+    } else if (over.isConnected !== false && over.parentElement) {
+      var at = Array.prototype.indexOf.call(over.parentElement.children, over);
+
+      entry = state.filteredEntries ? state.filteredEntries[at] : null;
+    }
+
+    return entry ? codexPage(state.state.currentTab, entry.sourceId) : null;
+  }
+
   function gridItemHit(doc) {
     var configId = doc.__fgItem ? itemConfigs[doc.__fgItem] : null;
 
@@ -719,6 +782,7 @@
   }
 
   var LOOKUPS = [
+    { pattern: /Codex\.html/, hit: codexHit },
     { pattern: /BackpackUI\.html/, hit: backpackHit },
     { pattern: /TradeUI\.html/, hit: tradeHit },
     { pattern: /ExploreMap\.html/, hit: function (doc) { return mapHit(doc, function (entry) { return entry.lockState !== 2; }); } },
@@ -734,7 +798,7 @@
         if (!LOOKUPS[i].pattern.test(docs[j].src)) continue;
 
         try {
-          var hit = LOOKUPS[i].hit(docs[j].doc);
+          var hit = LOOKUPS[i].hit(docs[j].doc, docs[j].frame);
 
           if (hit) return hit;
         } catch (e) {}
@@ -776,6 +840,7 @@
     { pattern: /CoreUI1\.html/, patch: function (doc) { placeHudButton(doc, hudButton); } },
     { pattern: /ExploreMap\.html|PreDisasterMap\.html/, patch: watchMarkers },
     { pattern: /PhoneSMS\.html/, patch: patchPhone },
+    { pattern: /Codex\.html/, patch: watchEntries },
     { pattern: /\.html/, patch: watchItems }
   ];
 
@@ -1222,6 +1287,7 @@
     else report();
   }, 1000);
 
-  window.__slfieldguide = { setup: setup, toggle: toggle, lookup: lookup, close: close };
+  // show and codexPage are for other mods too: Checklist links a Codex entry to its page with them.
+  window.__slfieldguide = { setup: setup, toggle: toggle, lookup: lookup, close: close, show: show, codexPage: codexPage, codexItems: setCodexItems };
   send('ready');
 })();

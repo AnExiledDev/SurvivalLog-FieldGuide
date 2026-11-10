@@ -436,6 +436,32 @@ function vuePage(src, state) {
   return doc;
 }
 
+// The Survival Codex (Codex.html): a grid of .entry cells, one per element of filteredEntries, and the right-hand
+// panel for the selected entry.
+function codexPage(tab, entries, selectedEntry) {
+  var doc = vuePage('file:///game/WebUI/UI/Codex/Codex.html', { state: { currentTab: tab }, filteredEntries: entries, selectedEntry: selectedEntry || null });
+  var root = doc.getElementById('app').appendChild(new FakeElement('div', doc));
+  var grid = root.appendChild(new FakeElement('div', doc));
+  var right = root.appendChild(new FakeElement('div', doc));
+
+  root.className = 'codex-root';
+  grid.className = 'grid';
+  right.className = 'col-right';
+  right.appendChild(new FakeElement('div', doc)).className = 'detail-name';
+  entries.forEach(function () {
+    var entry = grid.appendChild(new FakeElement('div', doc));
+
+    entry.className = 'entry';
+    entry.appendChild(new FakeElement('div', doc)).className = 'entry-name';
+  });
+
+  return doc;
+}
+
+function codexEntry(doc, at) {
+  return doc.querySelectorAll('.entry')[at].querySelector('.entry-name');
+}
+
 function openHud() {
   var doc = frame('file:///game/WebUI/UI/CoreUI1/CoreUI1.html');
   var column = doc.body.appendChild(new FakeElement('div', doc));

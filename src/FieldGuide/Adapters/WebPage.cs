@@ -47,6 +47,9 @@ internal sealed class WebPage
     /// <summary>Opens the page for what the pointer is over, or toggles the window when it is over nothing the site knows.</summary>
     public void Lookup(bool isChinese) => Call("lookup()", isChinese);
 
+    /// <summary>The item behind each Survival Codex entry that is not an item itself, for looking those entries up.</summary>
+    public bool CodexItems(string json, bool isChinese) => Call($"codexItems({json})", isChinese);
+
     /// <summary>Every call hands the page its words first, so a switch of the game's language shows at the next redraw.</summary>
     private bool Call(string expression, bool isChinese) =>
         Run($"window.__slfieldguideWords={Texts.Json(isChinese)};window.__slfieldguide?window.__slfieldguide.{expression}:{NoScriptReply}");

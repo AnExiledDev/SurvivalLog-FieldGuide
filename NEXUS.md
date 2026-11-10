@@ -1,5 +1,5 @@
 Name: Field Guide
-Summary: The Survival Log Database inside the game. Hover an item or a map location and press / to open its page in a window you can drag anywhere and resize from any edge. A HUD button opens it too, and the phone gets a Field Guide app. Download the whole site once to read it offline. English or Chinese, following the game's language.
+Summary: The Survival Log Database inside the game. Hover an item, a map location or a Codex entry and press / to open its page in a window you can drag anywhere and resize from any edge. A HUD button opens it too, and the phone gets a Field Guide app. Download the whole site once to read it offline. English or Chinese, following the game's language.
 
 Description (BBCode):
 [center][img]https://sldb.core-directive.com/media/save/1-save-safe.png[/img][/center]
@@ -8,7 +8,7 @@ Stop alt-tabbing to look things up. Field Guide puts the [url=https://sldb.core-
 
 [size=5]Main features[/size]
 [list]
-[*][b]Look it up with /[/b]: hover an item in your backpack, on a trader's shelf or in a workbench (brewer, cooker, freezer and the rest), or a location on the map, and press [b]/[/b] to open its page.[/*]
+[*][b]Look it up with /[/b]: hover an item in your backpack, on a trader's shelf or in a workbench (brewer, cooker, freezer and the rest), a location on the map, or an entry in the Survival Codex, and press [b]/[/b] to open its page.[/*]
 [*][b]Put it where you want it[/b]: drag the window by its title bar and resize it from any edge or corner. It opens where you left it, at the size you left it.[/*]
 [*][b]Text size[/b]: A- and A+ on the title bar make the text smaller or larger. The window keeps it.[/*]
 [*][b]UI size[/b]: with Exiled's Toolkit 0.10.0 or newer, its UI size setting draws what is in the window bigger or smaller. The window keeps the place and size you gave it. With 0.11.0 or newer, Field Guide's own UiScale setting can set a size for this mod alone.[/*]
@@ -37,7 +37,7 @@ Works in English and Chinese.
 
 [size=5]Requirements[/size]
 [list]
-[*]Survival Log 1.1.20151. A game update can break it until the mod is updated.[/*]
+[*]Survival Log 1.1.20719. A game update can break it until the mod is updated.[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]. Install it first.[/*]
 [*]Optional: [url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 or newer. With it, the phone app sits in the phone's dock with the game's apps. With 0.10.0 or newer, its UI size setting also sizes what is in the window. With 0.12.0 or newer, the / key does nothing while you type in a text box in any mod's window.[/*]
 [*]Optional: [url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]. With it, you can change every setting in game on its Mods screen and see what each one does, without opening the config file.[/*]
@@ -71,7 +71,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 
 [size=5]主要功能[/size]
 [list]
-[*][b]按 / 查询[/b]：把指针悬停在背包、交易货架或工作台（酿造台、灶台、冷柜等）里的物品，或地图上的地点上，按 [b]/[/b] 即可打开对应页面。[/*]
+[*][b]按 / 查询[/b]：把指针悬停在背包、交易货架或工作台（酿造台、灶台、冷柜等）里的物品、地图上的地点或生存图鉴里的条目上，按 [b]/[/b] 即可打开对应页面。[/*]
 [*][b]想放哪就放哪[/b]：拖动标题栏移动窗口，拖动任意边缘或角落调整大小。下次打开时保持上次的位置和大小。[/*]
 [*][b]文字大小[/b]：标题栏的 A- 和 A+ 可缩小或放大文字，并会保存。[/*]
 [*][b]界面大小[/b]：安装 Exiled's Toolkit 0.10.0 或更新版本后，可以用它的界面大小设置放大或缩小窗口里的内容，窗口的位置和大小保持不变。0.11.0 或更新版本还可以用 Field Guide 自己的 UiScale 设置单独调整本模组的大小。[/*]
@@ -99,7 +99,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 
 [size=5]前置要求[/size]
 [list]
-[*]Survival Log 1.1.20151。游戏更新后，在模组更新前可能无法使用。[/*]
+[*]Survival Log 1.1.20719。游戏更新后，在模组更新前可能无法使用。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]，请先安装。[/*]
 [*]可选：[url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.8.0 或更新版本。安装后手机应用会和游戏自带的应用一起放在手机底部的程序栏里。0.10.0 或更新版本还能用它的界面大小设置调整窗口里内容的大小。0.12.0 或更新版本下，在任何模组窗口的输入框里打字时 / 键不起作用。[/*]
 [*]可选：[url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]。装了它，可以在游戏里它的「模组」界面修改每项设置，并看到每项的说明，不用打开配置文件。[/*]
