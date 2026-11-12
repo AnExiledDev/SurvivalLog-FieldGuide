@@ -1,36 +1,42 @@
 # Changelog
 
+## 0.3.2
+
+- Clearer wording in the settings.
+- Made for Survival Log 1.1.20719.
+
 ## 0.3.1
 
-- Now uses Exiled's Toolkit for its shared parts, so it needs Exiled's Toolkit 0.19.0 or newer.
+- Needs Exiled's Toolkit 0.19.0 or newer, because Field Guide now uses the Toolkit's shared code.
 - Made for Survival Log 1.1.20719.
 
 ## 0.3.0
 
-- New: `/` over an entry in the Survival Codex opens its page: the item for Food, Prey, Dish, Plant, Craft and Decor entries, the furniture for Furniture entries. Over the panel on the right it opens the selected entry. For dishes, plants, crafts and decor, the item is read from the game's data.
+- New: hover an entry in the Survival Codex and press `/` to open its page. Food, Prey, Dish, Plant, Craft and Decor entries open their item, and Furniture entries open the furniture.
+- In the Codex, `/` over the panel on the right opens the selected entry.
 - Other mods can open a page in the Field Guide window. Checklist uses this for its `Open in Field Guide` link.
 - Made for Survival Log 1.1.20719.
 
 ## 0.2.1
 
-- The `/` key no longer looks things up while you type in a text box in any mod's window. Needs Exiled's Toolkit 0.12.0 or newer; without it the key works as before.
+- The `/` key no longer looks things up while you type in a text box in any mod's window. This needs Exiled's Toolkit 0.12.0 or newer. Without it, the key works as before.
 - With `Hotkey` set to `None`, the book button's tip no longer names a key.
 - Made for Survival Log 1.1.20151.
 
 ## 0.2.0
 
-- New: `UiScale` under Interface sets the size of Field Guide's own windows on their own, from 75% to 200%, whatever Exiled's Toolkit's UI size is. At 0, the default, they follow the Toolkit's. Needs Exiled's Toolkit 0.11.0 or newer.
+- New: the `UiScale` setting under Interface lets you size Field Guide's windows separately from Exiled's Toolkit's UI size, from 75% to 200%. At 0, the default, they follow the Toolkit. Needs Exiled's Toolkit 0.11.0 or newer.
 - Made for Survival Log 1.1.19611.
 
 ## 0.1.13
 
-- The game's screens do less work with Field Guide installed: what the game sends a screen is only read again when it holds an item Field Guide has not seen yet, and moving the pointer across the map does less work.
+- Less lag on the game's screens with Field Guide installed, and moving the pointer across the map is smoother.
 - Made for Survival Log 1.1.19611.
 
 ## 0.1.12
 
-- What is in the Field Guide window can be drawn bigger or smaller with the UI size setting of Exiled's Toolkit 0.10.0 or newer. A change shows at once, and the window stays where you put it, at the size you gave it.
-- The book button and the phone app keep the game's size.
+- Exiled's Toolkit's UI size setting (Toolkit 0.10.0 or newer) now makes everything in the Field Guide window bigger or smaller. A change shows right away, and the window keeps the place and size you gave it.
+- The book button and the phone app stay at the game's size.
 - Made for Survival Log 1.1.19611.
 
 ## 0.1.11
@@ -40,24 +46,24 @@
 
 ## 0.1.10
 
-- The phone runs smoother: once the Field Guide app is on the phone, the mod no longer searches the phone's screen every time something on it changes.
-- Less background work on the HUD while the Field Guide button is in place.
+- The phone runs smoother with the Field Guide app on it.
+- The HUD does less background work for the Field Guide button.
 - Made for Survival Log 1.1.19611.
 
 ## 0.1.9
 
-- The Field Guide phone app is on the phone the moment the phone opens, instead of showing up a moment later.
+- The Field Guide phone app shows up as soon as the phone opens, instead of a moment later.
 - Made for Survival Log 1.1.19611.
 
 ## 0.1.8
 
 - With Exiled's Toolkit 0.8.0 or newer, the Field Guide phone app sits in the phone's dock at the bottom, after the game's apps, instead of in the middle of the home screen over the notifications.
-- Made for Survival Log 1.1.19131; works on 1.1.19611.
+- Made for Survival Log 1.1.19131, and works on 1.1.19611.
 
 ## 0.1.7
 
-- Updating the offline copy keeps the old copy in use until the new one is in, instead of showing "no offline copy" during the download.
-- The game's hotkeys no longer stay paused if the game's screens reload, or the phone is put away, while the Field Guide phone app is open.
+- While the offline copy updates, the guide keeps reading the old copy until the new one is ready, instead of showing "no offline copy" during the download.
+- Fixed: the game's hotkeys could stay paused if the game's screens reloaded or the phone was put away while the Field Guide phone app was open.
 
 ## 0.1.6
 
@@ -65,18 +71,18 @@
 
 ## 0.1.5
 
-- A minimized window shrinks to just its title and buttons, kept at the window's right edge so the restore button stays where minimize was. Restoring brings back the full size.
+- A minimized window shrinks to just its title and buttons. It stays lined up with the window's right edge, so the restore button sits where the minimize button was. Restoring brings back the full size.
 
 ## 0.1.4
 
-- `/` over an item in a workbench (brewer, freezer, cooker, compressor and the rest) opens that item instead of the home page.
+- `/` over an item in a workbench (brewer, freezer, cooker, compressor and the rest) opens the item's page instead of the home page.
 - A minimized window can be dragged right down to the bottom of the screen, and comes back fully on screen when restored.
 - The window's title bar is much smaller.
 
 ## 0.1.3
 
-- The window has minimize, maximize and close buttons at the top right, like a desktop window. Minimize shrinks it to its title bar; `/` or the book button brings it back. Maximize fills the screen without changing the size you saved.
-- The phone app has minimize, open-in-the-large-window and close buttons. A minimized app opens again on the same page.
+- The window has minimize, maximize and close buttons at the top right, like a desktop window. Minimize shrinks it to its title bar, and `/` or the book button brings it back. Maximize fills the screen without changing the size you saved.
+- The phone app has buttons to minimize it, open its page in the large window, or close it. A minimized app opens again on the same page.
 - After the offline copy downloads, the window reloads the page you were reading rather than the last one it opened.
 
 ## 0.1.2
@@ -92,9 +98,9 @@
 ## 0.1.0
 
 - First release.
-- A window with the Survival Log Database that can be dragged anywhere and resized from any edge or corner. It remembers where you left it.
-- `/` over a backpack item, a trader's shelf item or a map location opens its page. Over nothing it opens or closes the window.
+- A window with the Survival Log Database that you can drag anywhere and resize from any edge or corner. It opens where you left it.
+- `/` over a backpack item, a trader's shelf item or a map location opens its page. Over nothing, it opens or closes the window.
 - A book button on the HUD tool column opens and closes the window.
 - A Field Guide app on the phone shows the site's phone layout.
-- The whole site can be downloaded for offline reading, with an update offered when the site changes.
+- You can download the whole site to read offline, and the guide offers an update when the site changes.
 - English and Chinese, following the game's language.
