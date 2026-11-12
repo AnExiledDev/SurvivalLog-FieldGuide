@@ -15,7 +15,7 @@ namespace FieldGuide;
 public sealed class Plugin : BasePlugin
 {
     private const string Guid = "com.dev.survivallog.fieldguide";
-    private const string Version = "0.3.2";
+    private const string Version = "0.3.3";
 
     /// <summary>Exiled's Toolkit: its shared helpers, page messages, UI size, live settings and typing check all come from it.</summary>
     private const string ToolkitGuid = "com.dev.survivallog.exiledtoolkit";

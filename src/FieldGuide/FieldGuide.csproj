@@ -43,7 +43,7 @@
     <AssemblyMetadata Include="ModManager.Author" Value="AnExiledDev" />
     <AssemblyMetadata Include="ModManager.Category" Value="QualityOfLife" />
     <AssemblyMetadata Include="ModManager.GameVersion" Value="1.1.20719" />
-    <AssemblyMetadata Include="ModManager.Settings" Value="Restart" />
+    <AssemblyMetadata Include="ModManager.Settings" Value="Live" />
     <AssemblyMetadata Include="ModManager.GitHub" Value="AnExiledDev/SurvivalLog-FieldGuide" />
     <AssemblyMetadata Include="ModManager.NexusId" Value="94" />
     <AssemblyMetadata Include="ModManager.Changelog" Value="https://github.com/AnExiledDev/SurvivalLog-FieldGuide/blob/main/CHANGELOG.md" />

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3
+
+- The Mods screen no longer says you need to restart after changing a setting. Every setting already applied right away.
+- Made for Survival Log 1.1.20719.
+
 ## 0.3.2
 
 - Clearer wording in the settings.

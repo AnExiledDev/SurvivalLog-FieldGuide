@@ -55,7 +55,7 @@ Works in English and Chinese.
 Delete [font=Courier New]FieldGuide.dll[/font] from the [font=Courier New]BepInEx\plugins[/font] folder. The offline copy is in [font=Courier New]BepInEx\FieldGuide[/font]. Delete that folder too to free the space.
 
 [size=5]Configuration[/size]
-You can change the hotkey, where pages come from (online, offline or automatic), the text size and the saved window place in game on Mod Manager's Mods screen, or in [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font] while the game is closed. [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuide/blob/main/CONFIG.md]CONFIG.md[/url] lists every setting, and the cfg file explains each one in English and Chinese. Changes take effect at the next game start.
+You can change the hotkey, where pages come from (online, offline or automatic), the text size and the saved window place in game on Mod Manager's Mods screen, and changes there apply right away. You can also edit [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font] while the game is closed. [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuide/blob/main/CONFIG.md]CONFIG.md[/url] lists every setting, and the cfg file explains each one in English and Chinese.
 
 [size=5]Feedback[/size]
 Found a bug or have an idea? Come say hi on the [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url], or post in this page's Posts tab. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\field-guide.log[/font].
@@ -117,7 +117,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 删除 [font=Courier New]BepInEx\plugins[/font] 中的 [font=Courier New]FieldGuide.dll[/font]。离线版位于 [font=Courier New]BepInEx\FieldGuide[/font]，一并删除即可释放空间。
 
 [size=5]配置[/size]
-在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font]，或在游戏内 Mod Manager 的「模组」界面中修改快捷键、页面来源（在线、离线或自动）、文字大小和保存的窗口位置。配置文件中每项设置都有中英文说明。修改在下次启动游戏时生效。
+在游戏内 Mod Manager 的「模组」界面中可以修改快捷键、页面来源（在线、离线或自动）、文字大小和保存的窗口位置，改动会立即生效。也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font]。配置文件中每项设置都有中英文说明。
 
 [size=5]反馈[/size]
 发现问题或有想法？欢迎来 [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url]，或在本页的 Posts 标签页留言。报告问题时请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\field-guide.log[/font]。
