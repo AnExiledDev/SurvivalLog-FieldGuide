@@ -101,7 +101,7 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 [list]
 [*]Survival Log 1.1.20719。游戏更新后，在模组更新前可能无法使用。[/*]
 [*][url=https://www.nexusmods.com/survivallog/mods/12]BepInEx for Survival Log[/url]，请先安装。[/*]
-[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.19.0 或更新版本。没有它本模组不会加载。它把手机应用和游戏自带的应用一起放在手机底部的程序栏里；在任何模组窗口的输入框里打字时，它让 / 键不起作用；它的界面大小设置还能调整窗口里内容的大小。[/*]
+[*][url=https://www.nexusmods.com/survivallog/mods/61]Exiled's Toolkit[/url] 0.19.0 或更新版本。没有它本模组不会加载。它把手机应用和游戏原本的应用一起放在手机底部的程序栏里；在任何模组窗口的输入框里打字时，它让 / 键不起作用；它的界面大小设置还能调整窗口里内容的大小。[/*]
 [*]可选：[url=https://www.nexusmods.com/survivallog/mods/73]Mod Manager[/url]。装了它，可以在游戏里它的「模组」界面修改每项设置，并看到每项的说明，不用打开配置文件。[/*]
 [/list]
 
