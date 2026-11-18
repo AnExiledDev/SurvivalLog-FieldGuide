@@ -58,8 +58,8 @@ Delete [font=Courier New]FieldGuide.dll[/font] from the [font=Courier New]BepInE
 You can change the hotkey, where pages come from (online, offline or automatic), the text size and the saved window place in game on Mod Manager's Mods screen, and changes there apply right away. You can also edit [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font] while the game is closed. [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuide/blob/main/CONFIG.md]CONFIG.md[/url] lists every setting, and the cfg file explains each one in English and Chinese.
 
 [size=5]Feedback[/size]
-Found a bug or have an idea? Come say hi on the [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url], or post in this page's Posts tab. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\field-guide.log[/font].
-To reach me directly, message [b]exiled.dev[/b] on Discord. You can find me in the [url=https://discord.gg/MZGg4gQAUe]official Survival Log Discord[/url]. I'm also on X as [url=https://x.com/AnExiledDev]@AnExiledDev[/url].
+Found a bug or have an idea? Come say hi in the [url=https://discord.gg/pDrQtqbZgb]unofficial modding Discord for Survival Log[/url], or post in this page's Posts tab. For bugs, please include [font=Courier New]BepInEx\LogOutput.log[/font] and [font=Courier New]BepInEx\field-guide.log[/font].
+To reach me directly, message [b]exiled.dev[/b] on Discord. You can find me in the [url=https://discord.gg/pDrQtqbZgb]unofficial modding Discord[/url] and the [url=https://discord.gg/MZGg4gQAUe]official Survival Log Discord[/url]. I'm also on X as [url=https://x.com/AnExiledDev]@AnExiledDev[/url].
 
 [size=5]Source and license[/size]
 Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuide]github.com/AnExiledDev/SurvivalLog-FieldGuide[/url]
@@ -120,8 +120,8 @@ Open source under MIT: [url=https://github.com/AnExiledDev/SurvivalLog-FieldGuid
 在游戏内 Mod Manager 的「模组」界面中可以修改快捷键、页面来源（在线、离线或自动）、文字大小和保存的窗口位置，改动会立即生效。也可以在游戏关闭时编辑 [font=Courier New]BepInEx\config\com.dev.survivallog.fieldguide.cfg[/font]。配置文件中每项设置都有中英文说明。
 
 [size=5]反馈[/size]
-发现问题或有想法？欢迎来 [url=https://discord.gg/trTsyxUFqg]Core Directive Discord[/url]，或在本页的 Posts 标签页留言。报告问题时请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\field-guide.log[/font]。
-想直接联系我，可以在 Discord 上给 [b]exiled.dev[/b] 发消息，我在 [url=https://discord.gg/MZGg4gQAUe]Survival Log 官方 Discord[/url] 里。也可以在 X 上找我：[url=https://x.com/AnExiledDev]@AnExiledDev[/url]。
+发现问题或有想法？欢迎来 [url=https://discord.gg/pDrQtqbZgb]Survival Log 非官方模组 Discord[/url]，或在本页的 Posts 标签页留言。报告问题时请附上 [font=Courier New]BepInEx\LogOutput.log[/font] 和 [font=Courier New]BepInEx\field-guide.log[/font]。
+想直接联系我，可以在 Discord 上给 [b]exiled.dev[/b] 发消息，我在 [url=https://discord.gg/pDrQtqbZgb]Survival Log 非官方模组 Discord[/url] 和 [url=https://discord.gg/MZGg4gQAUe]Survival Log 官方 Discord[/url] 里。也可以在 X 上找我：[url=https://x.com/AnExiledDev]@AnExiledDev[/url]。
 
 [size=5]源代码与许可[/size]
 基于 MIT 许可开源：[url=https://github.com/AnExiledDev/SurvivalLog-FieldGuide]github.com/AnExiledDev/SurvivalLog-FieldGuide[/url]
